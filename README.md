@@ -29,6 +29,16 @@ The frontend portfolio includes fictional customers, banks, brokers, application
 1. Apply `database\schema.sql` to an isolated SQL Server demo database.
 2. Apply `database\seed.sql` to add fictional sample records.
 
+The `(localdb)\MSSQLLocalDB` instance has been seeded into `TheCreditBureauDemo`. To repeat the setup from the repository root with Windows authentication:
+
+```powershell
+sqlcmd -S "(localdb)\MSSQLLocalDB" -E -Q "IF DB_ID(N'TheCreditBureauDemo') IS NULL CREATE DATABASE [TheCreditBureauDemo];"
+sqlcmd -S "(localdb)\MSSQLLocalDB" -E -d TheCreditBureauDemo -i database\schema.sql
+sqlcmd -S "(localdb)\MSSQLLocalDB" -E -d TheCreditBureauDemo -i database\seed.sql
+```
+
+The schema and seed scripts are safe to rerun. The API still uses its in-memory repository and is not connected to this SQL database.
+
 The frontend includes password-free local demo identities for customer, broker, bank, credit bureau, credit officer, administrator, and regulator/auditor roles. Choose an identity in the header to change who is acting, then use its role-labeled button to animate the sample workflow. Application rows are filtered for the selected role; administrator and auditor views show aggregate summaries only. These are client-side presentation rules, not authentication or access control. See `docs\data-visibility.md` for the demo visibility matrix and production limitations.
 
 ## Agents and instructions
