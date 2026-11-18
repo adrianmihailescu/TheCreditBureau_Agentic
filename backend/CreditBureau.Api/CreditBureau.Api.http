@@ -1,0 +1,82 @@
+@baseUrl = http://localhost:5250
+# After creating an application, replace this with its id from the response.
+@newApplicationId = APP-REPLACE-ME
+
+### Read SQL-backed demo data
+GET {{baseUrl}}/api/demo/state
+
+### List applications
+GET {{baseUrl}}/api/applications
+
+### Read an application
+GET {{baseUrl}}/api/applications/APP-2026-001
+
+### Create an application
+POST {{baseUrl}}/api/applications
+Content-Type: application/json
+
+{
+  "customerAccountId": "demo-customer",
+  "bankId": "BNK-101",
+  "brokerId": "BRK-201",
+  "product": "Personal loan",
+  "requestedAmount": 12000,
+  "consentRecorded": true,
+  "documentsProvided": ["Proof of identity", "Proof of income"]
+}
+
+### Route an application
+POST {{baseUrl}}/api/applications/{{newApplicationId}}/route-to-bank
+Content-Type: application/json
+
+{
+  "actorAccountId": "demo-broker"
+}
+
+### Request a bureau report
+POST {{baseUrl}}/api/applications/{{newApplicationId}}/request-bureau-report
+Content-Type: application/json
+
+{
+  "actorAccountId": "demo-bank"
+}
+
+### Prepare a bureau report
+POST {{baseUrl}}/api/applications/{{newApplicationId}}/prepare-bureau-report
+Content-Type: application/json
+
+{
+  "actorAccountId": "demo-bureau"
+}
+
+### Send to officer
+POST {{baseUrl}}/api/applications/{{newApplicationId}}/send-to-officer
+Content-Type: application/json
+
+{
+  "actorAccountId": "demo-bank"
+}
+
+### Record a final officer decision
+POST {{baseUrl}}/api/applications/APP-2026-001/decision
+Content-Type: application/json
+
+{
+  "actorAccountId": "demo-credit-officer",
+  "decision": "Approved"
+}
+
+### Persist workflow limits
+PUT {{baseUrl}}/api/workflow/limits
+Content-Type: application/json
+
+{
+  "actorAccountId": "demo-administrator",
+  "maximumApplicationAmount": 50000,
+  "bankExposureCap": 150000,
+  "requireConsent": true,
+  "requiredDocuments": ["Proof of identity", "Proof of income"]
+}
+
+### Missing application returns 404
+GET {{baseUrl}}/api/applications/APP-NOT-FOUND

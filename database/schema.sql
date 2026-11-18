@@ -61,3 +61,66 @@ BEGIN
     );
 END;
 GO
+
+IF COL_LENGTH(N'dbo.Applications', N'DocumentsProvidedJson') IS NULL
+BEGIN
+    ALTER TABLE dbo.Applications
+        ADD DocumentsProvidedJson NVARCHAR(MAX) NOT NULL
+            CONSTRAINT DF_Applications_DocumentsProvidedJson DEFAULT N'[]';
+END;
+GO
+
+IF COL_LENGTH(N'dbo.Applications', N'ReportPrepared') IS NULL
+BEGIN
+    ALTER TABLE dbo.Applications
+        ADD ReportPrepared BIT NOT NULL
+            CONSTRAINT DF_Applications_ReportPrepared DEFAULT (0);
+END;
+GO
+
+IF OBJECT_ID(N'dbo.DemoAccounts', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.DemoAccounts (
+        Id NVARCHAR(64) NOT NULL PRIMARY KEY,
+        Name NVARCHAR(100) NOT NULL,
+        Role NVARCHAR(40) NOT NULL,
+        Email NVARCHAR(160) NOT NULL,
+        Organization NVARCHAR(120) NOT NULL,
+        Action NVARCHAR(80) NOT NULL,
+        ScopeId NVARCHAR(32) NULL,
+        SortOrder INT NOT NULL
+    );
+END;
+GO
+
+IF OBJECT_ID(N'dbo.WorkflowSettings', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.WorkflowSettings (
+        Id INT NOT NULL PRIMARY KEY,
+        MaximumApplicationAmount DECIMAL(12, 2) NOT NULL,
+        BankExposureCap DECIMAL(12, 2) NOT NULL,
+        RequireConsent BIT NOT NULL,
+        RequiredDocumentsJson NVARCHAR(MAX) NOT NULL,
+        CONSTRAINT CK_WorkflowSettings_Id CHECK (Id = 1),
+        CONSTRAINT CK_WorkflowSettings_ApplicationAmount CHECK (MaximumApplicationAmount > 0),
+        CONSTRAINT CK_WorkflowSettings_BankExposure CHECK (BankExposureCap > 0)
+    );
+END;
+GO
+
+IF OBJECT_ID(N'dbo.AuditEvents', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.AuditEvents (
+        Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        OccurredAt DATETIMEOFFSET NOT NULL,
+        ActorAccountId NVARCHAR(64) NOT NULL,
+        ActorRole NVARCHAR(40) NOT NULL,
+        ApplicationId NVARCHAR(32) NULL,
+        Action NVARCHAR(160) NOT NULL,
+        CONSTRAINT FK_AuditEvents_DemoAccounts
+            FOREIGN KEY (ActorAccountId) REFERENCES dbo.DemoAccounts(Id),
+        CONSTRAINT FK_AuditEvents_Applications
+            FOREIGN KEY (ApplicationId) REFERENCES dbo.Applications(Id)
+    );
+END;
+GO

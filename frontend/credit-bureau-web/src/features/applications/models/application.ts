@@ -3,12 +3,21 @@ import type { DemoBroker } from "../../brokers/models/broker";
 import type { DemoCreditReport } from "../../credit-reports/models/creditReport";
 import type { DemoCustomer } from "../../customers/models/customer";
 
+export const documentTypes = [
+  "Proof of identity",
+  "Proof of income",
+  "Business registration",
+] as const;
+
+export type DemoDocumentType = (typeof documentTypes)[number];
+
 export type ApplicationStatus =
-  | "In review"
-  | "Documents needed"
+  | "Submitted"
+  | "Bank review"
+  | "Awaiting bureau report"
   | "Awaiting officer"
-  | "Offer prepared"
-  | "Consent required";
+  | "Approved"
+  | "Rejected";
 
 export interface DemoApplication {
   id: string;
@@ -20,11 +29,13 @@ export interface DemoApplication {
   status: ApplicationStatus;
   submittedAt: string;
   consentRecorded: boolean;
+  documentsProvided: DemoDocumentType[];
+  reportPrepared: boolean;
 }
 
 export interface DemoApplicationRow extends DemoApplication {
   customer: DemoCustomer;
   bank: DemoBank;
   broker: DemoBroker;
-  report: DemoCreditReport | undefined;
+  report: DemoCreditReport | null;
 }

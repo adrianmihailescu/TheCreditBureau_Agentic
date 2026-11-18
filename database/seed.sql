@@ -67,3 +67,73 @@ IF NOT EXISTS (SELECT 1 FROM dbo.CreditReports WHERE Id = N'RPT-DEMO-003')
     VALUES (N'RPT-DEMO-003', N'APP-2026-003', '2026-11-14', 748,
         N'Fictional report; sample data only. Human review required.');
 GO
+
+UPDATE dbo.Applications
+SET Status = CASE Status
+        WHEN N'In review' THEN N'Awaiting officer'
+        WHEN N'Documents needed' THEN N'Bank review'
+        WHEN N'Consent required' THEN N'Submitted'
+        ELSE Status
+    END,
+    DocumentsProvidedJson = CASE
+        WHEN Id = N'APP-2026-001' AND DocumentsProvidedJson = N'[]'
+            THEN N'["Proof of identity","Proof of income"]'
+        WHEN Id = N'APP-2026-003'
+             AND DocumentsProvidedJson = N'[]'
+            THEN N'["Proof of identity","Proof of income","Business registration"]'
+        WHEN Id = N'APP-2026-002' AND DocumentsProvidedJson = N'[]'
+            THEN N'["Proof of identity"]'
+        ELSE DocumentsProvidedJson
+    END
+WHERE Id IN (N'APP-2026-001', N'APP-2026-002', N'APP-2026-003', N'APP-2026-004');
+GO
+
+UPDATE a
+SET ReportPrepared = 1
+FROM dbo.Applications AS a
+WHERE EXISTS (
+    SELECT 1
+    FROM dbo.CreditReports AS report
+    WHERE report.ApplicationId = a.Id
+);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.DemoAccounts WHERE Id = N'demo-customer')
+    INSERT INTO dbo.DemoAccounts (Id, Name, Role, Email, Organization, Action, ScopeId, SortOrder)
+    VALUES (N'demo-customer', N'Demo Customer', N'Customer', N'jordan.lee@example.test',
+        N'Individual applicant', N'Start application', N'CUS-1001', 1);
+IF NOT EXISTS (SELECT 1 FROM dbo.DemoAccounts WHERE Id = N'demo-broker')
+    INSERT INTO dbo.DemoAccounts (Id, Name, Role, Email, Organization, Action, ScopeId, SortOrder)
+    VALUES (N'demo-broker', N'Demo Broker', N'Broker', N'avery.brooks@example.test',
+        N'Bridgeway Finance', N'Submit to a bank', N'BRK-201', 2);
+IF NOT EXISTS (SELECT 1 FROM dbo.DemoAccounts WHERE Id = N'demo-bank')
+    INSERT INTO dbo.DemoAccounts (Id, Name, Role, Email, Organization, Action, ScopeId, SortOrder)
+    VALUES (N'demo-bank', N'demo bank', N'Bank', N'morgan.ellis@northstar.example.test',
+        N'Northstar Community Bank', N'Start bank review', N'BNK-101', 3);
+IF NOT EXISTS (SELECT 1 FROM dbo.DemoAccounts WHERE Id = N'demo-bureau')
+    INSERT INTO dbo.DemoAccounts (Id, Name, Role, Email, Organization, Action, ScopeId, SortOrder)
+    VALUES (N'demo-bureau', N'demo bureau', N'Credit Bureau', N'jamie.park@bureau.example.test',
+        N'The Credit Bureau', N'Prepare demo report', NULL, 4);
+IF NOT EXISTS (SELECT 1 FROM dbo.DemoAccounts WHERE Id = N'demo-credit-officer')
+    INSERT INTO dbo.DemoAccounts (Id, Name, Role, Email, Organization, Action, ScopeId, SortOrder)
+    VALUES (N'demo-credit-officer', N'demo credit officer', N'Credit Officer',
+        N'dana.scott@northstar.example.test', N'Northstar Community Bank',
+        N'Start officer review', N'BNK-101', 5);
+IF NOT EXISTS (SELECT 1 FROM dbo.DemoAccounts WHERE Id = N'demo-administrator')
+    INSERT INTO dbo.DemoAccounts (Id, Name, Role, Email, Organization, Action, ScopeId, SortOrder)
+    VALUES (N'demo-administrator', N'demo administrator', N'Administrator',
+        N'sam.taylor@example.test', N'Platform administration',
+        N'Run workflow demo', NULL, 6);
+IF NOT EXISTS (SELECT 1 FROM dbo.DemoAccounts WHERE Id = N'demo-auditor')
+    INSERT INTO dbo.DemoAccounts (Id, Name, Role, Email, Organization, Action, ScopeId, SortOrder)
+    VALUES (N'demo-auditor', N'demo auditor', N'Regulator / Auditor',
+        N'alex.morgan@oversight.example.test', N'Oversight team',
+        N'Start audit review', NULL, 7);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.WorkflowSettings WHERE Id = 1)
+    INSERT INTO dbo.WorkflowSettings
+        (Id, MaximumApplicationAmount, BankExposureCap, RequireConsent, RequiredDocumentsJson)
+    VALUES
+        (1, 50000, 150000, 1, N'["Proof of identity","Proof of income"]');
+GO

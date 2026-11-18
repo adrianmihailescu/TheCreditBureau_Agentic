@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import ApplicationPortfolio from "../features/applications/ApplicationPortfolio";
-import { demoAccounts } from "../features/accounts/demoAccounts";
+import ActorWorkspace from "../features/applications/workflow/ActorWorkspace";
 import { agentRoles } from "../features/agents/agentRoles";
+import { useDemoWorkflow } from "../features/applications/workflow/DemoWorkflowContext";
 
 const iconShapes = {
   users: (
@@ -179,13 +180,15 @@ function FlowStep({ number, label, title, description }: FlowStepProps) {
 }
 
 function App() {
-  const [activeAccountId, setActiveAccountId] = useState(demoAccounts[0].id);
+  const workflow = useDemoWorkflow();
+  const [activeAccountId, setActiveAccountId] = useState<string | null>(null);
   const [selectedAgent, setSelectedAgent] = useState<number | null>(null);
   const [workflowRunning, setWorkflowRunning] = useState(false);
   const [currentStep, setCurrentStep] = useState(-1);
   const [hasRun, setHasRun] = useState(false);
   const [workflowStartedBy, setWorkflowStartedBy] = useState<string | null>(null);
-  const activeAccount = demoAccounts.find(({ id }) => id === activeAccountId) ?? demoAccounts[0];
+  const activeAccount = workflow.accounts.find(({ id }) => id === activeAccountId)
+    ?? workflow.accounts[0];
 
   useEffect(() => {
     if (!workflowRunning) return undefined;
@@ -204,6 +207,32 @@ function App() {
 
     return () => window.clearInterval(timer);
   }, [workflowRunning]);
+
+  if (workflow.isLoading) {
+    return (
+      <div className="app-shell database-state" role="status">
+        Loading demo data from SQL Server…
+      </div>
+    );
+  }
+
+  if (workflow.loadError) {
+    return (
+      <div className="app-shell database-state database-error" role="alert">
+        <h1>Could not load the demo database</h1>
+        <p>{workflow.loadError}</p>
+        <p>Start the API and verify the SQL Server LocalDB connection, then reload this page.</p>
+      </div>
+    );
+  }
+
+  if (!activeAccount) {
+    return (
+      <div className="app-shell database-state database-error" role="alert">
+        No demo actor accounts were returned by the database. Run the database seed script.
+      </div>
+    );
+  }
 
   function runDemo() {
     if (workflowRunning) return;
@@ -232,7 +261,7 @@ function App() {
               disabled={workflowRunning}
               onChange={(event) => setActiveAccountId(event.currentTarget.value)}
             >
-              {demoAccounts.map((account) => (
+              {workflow.accounts.map((account) => (
                 <option key={account.id} value={account.id}>
                   {account.name} · {account.role}
                 </option>
@@ -260,6 +289,8 @@ function App() {
             {workflowRunning ? "Workflow running" : activeAccount.action}
           </button>
         </section>
+
+        <ActorWorkspace account={activeAccount} />
 
         <section className="flow-card" aria-labelledby="flow-title">
           <div className="flow-card-header">
@@ -390,7 +421,6 @@ function App() {
         </section>
 
         <ApplicationPortfolio account={activeAccount} />
-
         <footer className="page-footer">
           <span>THE CREDIT BUREAU <span className="footer-divider">/</span> CREDIT FLOW PROTOTYPE</span>
           <span>Designed for transparency, built for trust.</span>

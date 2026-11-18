@@ -1,17 +1,18 @@
 import { useEffect, useState } from "react";
 import StatusBadge from "../../components/StatusBadge";
 import type { DemoAccount } from "../accounts/demoAccounts";
-import { useDemoApplications } from "../../hooks/useDemoApplications";
 import { getApplicationView, type ApplicationColumn } from "./access/applicationAccess";
-import type { ApplicationStatus } from "./models/application";
+import { useDemoWorkflow } from "./workflow/DemoWorkflowContext";
+import type { ApplicationStatus, DemoApplicationRow } from "./models/application";
 
 const statuses: readonly ("All applications" | ApplicationStatus)[] = [
   "All applications",
-  "In review",
-  "Documents needed",
+  "Submitted",
+  "Bank review",
+  "Awaiting bureau report",
   "Awaiting officer",
-  "Offer prepared",
-  "Consent required",
+  "Approved",
+  "Rejected",
 ] as const;
 
 const currency = new Intl.NumberFormat("en-US", {
@@ -37,7 +38,8 @@ const columnLabels: Record<ApplicationColumn, string> = {
 };
 
 export default function ApplicationPortfolio({ account }: ApplicationPortfolioProps) {
-  const view = getApplicationView(account, useDemoApplications());
+  const { applications } = useDemoWorkflow();
+  const view = getApplicationView(account, applications);
   const [selectedStatus, setSelectedStatus] =
     useState<(typeof statuses)[number]>("All applications");
 
@@ -166,7 +168,7 @@ export default function ApplicationPortfolio({ account }: ApplicationPortfolioPr
 
 function renderCell(
   column: ApplicationColumn,
-  application: ReturnType<typeof useDemoApplications>[number],
+  application: DemoApplicationRow,
 ) {
   switch (column) {
     case "application":
@@ -183,7 +185,8 @@ function renderCell(
       return currency.format(application.requestedAmount);
     case "report":
       if (!application.consentRecorded) return "Consent required";
-      return application.report ? `Demo ${application.report.demoScore}` : "Not available";
+      if (application.report) return `Demo ${application.report.demoScore}`;
+      return application.reportPrepared ? "Prepared (demo)" : "Not available";
     case "status":
       return <StatusBadge status={application.status} />;
     case "consent":

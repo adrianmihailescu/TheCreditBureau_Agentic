@@ -1218,6 +1218,445 @@ h1 {
   font-size: 16px;
 }
 
+.actor-workspace {
+  padding: 37px 0 15px;
+}
+
+.workspace-heading,
+.workspace-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.workspace-heading {
+  margin-bottom: 15px;
+}
+
+.workspace-heading h2 {
+  margin: 6px 0 0;
+  color: #e9edef;
+  font-size: 21px;
+  font-weight: 650;
+  letter-spacing: -0.035em;
+}
+
+.workspace-demo-badge,
+.workspace-limit {
+  padding: 7px 9px;
+  color: #a9c5e1;
+  border: 1px solid #304357;
+  border-radius: 20px;
+  background: #17212b;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.workspace-panel {
+  padding: 17px;
+  border: 1px solid #252b30;
+  border-radius: 9px;
+  background: #101418;
+}
+
+.workspace-panel-heading {
+  margin-bottom: 15px;
+}
+
+.workspace-panel-heading h3 {
+  margin: 0 0 5px;
+  color: #dce3e6;
+  font-size: 16px;
+}
+
+.workspace-panel-heading p,
+.workflow-hint {
+  margin: 0;
+  color: #929da3;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.workflow-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+}
+
+.workflow-form > label:not(.workflow-check) {
+  display: grid;
+  gap: 6px;
+  color: #b7c3c9;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.workflow-form input:not([type="checkbox"]),
+.workflow-form select {
+  width: 100%;
+  min-height: 41px;
+  padding: 8px 10px;
+  color: #dce5e9;
+  border: 1px solid #35424a;
+  border-radius: 6px;
+  background: #151a1f;
+  font: inherit;
+  font-size: 14px;
+}
+
+.workflow-choice-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid #30383e;
+  border-radius: 7px;
+}
+
+.workflow-choice-group legend {
+  padding: 0 5px;
+  color: #b7c3c9;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.workflow-check {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: #b6c0c5;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.workflow-check input {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  margin: 1px 0 0;
+  accent-color: #69cbb7;
+}
+
+.workflow-consent,
+.workflow-hint,
+.workflow-form-actions {
+  grid-column: 1 / -1;
+}
+
+.workflow-hint {
+  font-size: 12px;
+}
+
+.workflow-form-actions,
+.decision-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.workflow-primary-button,
+.workflow-secondary-button {
+  min-height: 38px;
+  padding: 7px 12px;
+  border: 1px solid #68cbb7;
+  border-radius: 6px;
+  background: #1b5148;
+  color: #e4faf5;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.workflow-secondary-button {
+  color: #e5c4b8;
+  border-color: #755246;
+  background: #38241e;
+}
+
+.workflow-primary-button:disabled,
+.workflow-secondary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.workflow-feedback {
+  margin: 0;
+  color: #8edbc9;
+  font-size: 13px;
+}
+
+.workspace-record-list,
+.audit-event-list {
+  display: grid;
+  gap: 9px;
+}
+
+.workflow-record {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px 16px;
+  padding: 13px;
+  border: 1px solid #293239;
+  border-radius: 7px;
+  background: #13191e;
+}
+
+.workflow-record-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.workflow-record-title strong {
+  color: #e3eaed;
+  font-size: 14px;
+}
+
+.record-status {
+  padding: 4px 7px;
+  color: #a9c5e1;
+  border: 1px solid #304357;
+  border-radius: 12px;
+  background: #17212b;
+  font-size: 11px;
+}
+
+.workflow-record-main p {
+  margin: 5px 0 0;
+  color: #aeb9be;
+  font-size: 13px;
+}
+
+.workflow-issues {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 9px 12px 9px 30px;
+  color: #735a26;
+  border: 1px solid #e6d39e;
+  border-radius: 6px;
+  background: #fff8e6;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.decision-acknowledgement {
+  margin: 0 0 13px;
+}
+
+.empty-workspace {
+  margin: 0;
+  padding: 17px;
+  color: #a2adb2;
+  border: 1px dashed #354148;
+  border-radius: 7px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.exposure-summary {
+  margin-top: 21px;
+  padding-top: 15px;
+  border-top: 1px solid #293239;
+}
+
+.exposure-summary h4 {
+  margin: 0 0 9px;
+  color: #c9d2d6;
+  font-size: 13px;
+}
+
+.exposure-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  color: #aeb9be;
+  border-top: 1px solid #20282d;
+  font-size: 13px;
+}
+
+.exposure-row strong {
+  color: #dce5e9;
+}
+
+.audit-event {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.7fr) minmax(180px, 1fr) minmax(150px, 0.8fr);
+  gap: 12px;
+  padding: 11px 12px;
+  color: #aeb9be;
+  border: 1px solid #293239;
+  border-radius: 6px;
+  background: #13191e;
+  font-size: 12px;
+}
+
+.audit-event time {
+  color: #8f9ba1;
+}
+
+.audit-event strong {
+  color: #dbe4e8;
+}
+
+@media (max-width: 600px) {
+  .workspace-heading,
+  .workspace-panel-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .workflow-form {
+    grid-template-columns: 1fr;
+  }
+
+  .workflow-consent,
+  .workflow-hint,
+  .workflow-form-actions {
+    grid-column: auto;
+  }
+
+  .workflow-record {
+    grid-template-columns: 1fr;
+  }
+
+  .workflow-issues {
+    grid-column: auto;
+  }
+
+  .audit-event {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+}
+
+.workspace-heading h2 {
+  color: #234365;
+}
+
+.workspace-demo-badge {
+  color: #315d85;
+  border-color: #b7d2e8;
+  background: #e7f2fc;
+}
+
+.workspace-panel {
+  border-color: #c8dff2;
+  background: #e8f4ff;
+}
+
+.workspace-panel-heading h3,
+.exposure-summary h4 {
+  color: #234365;
+}
+
+.workspace-panel-heading p,
+.workflow-hint {
+  color: #536f8a;
+}
+
+.database-state {
+  margin-top: 40px;
+  padding: 24px;
+  color: #355572;
+  border: 1px solid #c8dff2;
+  border-radius: 10px;
+  background: #e8f4ff;
+  font-size: 16px;
+}
+
+.database-state h1 {
+  color: #234365;
+  font-size: 28px;
+}
+
+.database-state p {
+  color: #536f8a;
+}
+
+.workflow-record-main small,
+.workflow-feedback {
+  color: #356b62;
+}
+
+.workspace-limit {
+  color: #315d85;
+  border-color: #b7d2e8;
+  background: #f5faff;
+}
+
+.workflow-form > label:not(.workflow-check),
+.workflow-choice-group legend {
+  color: #355572;
+}
+
+.workflow-form input:not([type="checkbox"]),
+.workflow-form select {
+  color: #243f5b;
+  border-color: #b9d1e5;
+  background: #fff;
+}
+
+.workflow-choice-group {
+  border-color: #b9d1e5;
+  background: #f5faff;
+}
+
+.workflow-check {
+  color: #355572;
+}
+
+.workflow-record,
+.audit-event {
+  border-color: #c5d9eb;
+  background: #fff;
+}
+
+.workflow-record-title strong,
+.workflow-record-main p,
+.audit-event strong {
+  color: #294762;
+}
+
+.record-status {
+  color: #315d85;
+  border-color: #b7d2e8;
+  background: #eaf4fd;
+}
+
+.empty-workspace {
+  color: #536f8a;
+  border-color: #b9d1e5;
+  background: #f5faff;
+}
+
+.exposure-summary {
+  border-top-color: #c5d9eb;
+}
+
+.exposure-row {
+  color: #49657f;
+  border-top-color: #d3e3f0;
+}
+
+.exposure-row strong {
+  color: #294762;
+}
+
+.audit-event {
+  color: #49657f;
+}
+
+.audit-event time {
+  color: #627d97;
+}
+
 .flow-step-description,
 .agent-name,
 .infrastructure > span:last-child,

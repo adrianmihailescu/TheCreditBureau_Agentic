@@ -1,13 +1,13 @@
 # Architecture
 
 ```text
-frontend/credit-bureau-web  React + TypeScript demo UI and fictional fixtures
-backend/CreditBureau.Api   ASP.NET Core API with an in-memory demo repository
+frontend/credit-bureau-web  React + TypeScript demo UI; loads workflow data from the API
+backend/CreditBureau.Api   ASP.NET Core API backed by SQL Server LocalDB
 database/                  SQL Server schema and idempotent fictional seed records
 agents/                    Role definitions and orchestration/runtime guidance
 .github/                   VS Code custom agent profiles and Copilot instructions
 ```
 
-The frontend demo reads local TypeScript fixtures. The API independently exposes an in-memory sample application list. Neither is connected to SQL Server or an external credit bureau. SQL scripts describe a future persistence shape; they are not automatically applied. A `TheCreditBureauDemo` database has been seeded on `(localdb)\MSSQLLocalDB` for manual inspection.
+Customer, institution, demo-account, application, report, workflow-setting, and audit-event data are loaded from and persisted to `TheCreditBureauDemo` on `(localdb)\MSSQLLocalDB`. Apply `database\schema.sql`, `database\procedures.sql`, and `database\seed.sql` in that order before starting the API. Application, report, workflow-setting, and audit writes run through transactional SQL Server procedures. The frontend does not contain application fixtures. The demo API does not connect to a real credit bureau.
 
-The frontend applies role-specific presentation filters to demo rows; the sample API does not authenticate callers or enforce those filters. Never treat the demo role picker as an authorization boundary. Production access control must be implemented and tested server-side.
+The frontend applies role-specific presentation filters to data returned by the demo API. The API does not authenticate callers, so these filters and the demo role picker are not security boundaries. Production access control must be implemented and tested server-side.

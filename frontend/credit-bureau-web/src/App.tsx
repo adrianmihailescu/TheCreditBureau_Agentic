@@ -1,5 +1,10 @@
 import CreditBureauDashboard from "./pages/CreditBureauDashboard";
+import { DemoWorkflowProvider } from "./features/applications/workflow/DemoWorkflowContext";
 
 export default function App() {
-  return <CreditBureauDashboard />;
+  return (
+    <DemoWorkflowProvider>
+      <CreditBureauDashboard />
+    </DemoWorkflowProvider>
+  );
 }
