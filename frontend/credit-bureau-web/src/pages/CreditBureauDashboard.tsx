@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import ApplicationPortfolio from "../features/applications/ApplicationPortfolio";
+import { agentRoles } from "../features/agents/agentRoles";
 
 const iconShapes = {
   users: (
@@ -88,12 +90,6 @@ const iconShapes = {
 
 type IconName = keyof typeof iconShapes;
 
-interface Agent {
-  name: string;
-  icon: IconName;
-  description: string;
-}
-
 interface Actor {
   name: string;
   icon: IconName;
@@ -124,59 +120,6 @@ function Icon({ name, size = 18, className = "" }: IconProps) {
     </svg>
   );
 }
-
-const agents = [
-  {
-    name: "Orchestrator Agent",
-    icon: "workflow",
-    description: "Coordinates application handoffs and tracks the end-to-end workflow.",
-  },
-  {
-    name: "Customer Agent",
-    icon: "users",
-    description: "Guides customers through application questions and status updates.",
-  },
-  {
-    name: "Broker Agent",
-    icon: "handshake",
-    description: "Matches application requirements with participating banks.",
-  },
-  {
-    name: "Bank Agent",
-    icon: "bank",
-    description: "Routes application information through a bank's lending process.",
-  },
-  {
-    name: "Bureau Agent",
-    icon: "database",
-    description: "Assembles an authorized credit report from bureau records.",
-  },
-  {
-    name: "Risk Agent",
-    icon: "chart",
-    description: "Calculates risk indicators to support human review, never to decide alone.",
-  },
-  {
-    name: "Compliance Agent",
-    icon: "shield",
-    description: "Checks that consent, policy requirements, and required documents are present.",
-  },
-  {
-    name: "Document Agent",
-    icon: "file",
-    description: "Extracts information from submitted documents for human verification.",
-  },
-  {
-    name: "Notification Agent",
-    icon: "bell",
-    description: "Prepares application status notifications for the relevant participants.",
-  },
-  {
-    name: "Audit Agent",
-    icon: "lock",
-    description: "Records workflow events and flags items for compliance review.",
-  },
-] satisfies Agent[];
 
 const actors = [
   {
@@ -216,33 +159,20 @@ const actors = [
   },
 ] satisfies Actor[];
 
-interface FlowNodeProps {
-  icon: IconName;
-  eyebrow: string;
+interface FlowStepProps {
+  number: string;
+  label: string;
   title: string;
   description: string;
-  variant?: string;
 }
 
-function FlowNode({ icon, eyebrow, title, description, variant = "" }: FlowNodeProps) {
+function FlowStep({ number, label, title, description }: FlowStepProps) {
   return (
-    <div className={`flow-node ${variant}`}>
-      <span className="node-icon"><Icon name={icon} size={19} /></span>
-      <span className="node-eyebrow">{eyebrow}</span>
+    <div className="flow-step">
+      <span className="flow-step-number">{number}</span>
+      <span className="flow-step-label">{label}</span>
       <strong>{title}</strong>
-      <span className="node-description">{description}</span>
-    </div>
-  );
-}
-
-interface ConnectorProps {
-  horizontal?: boolean;
-}
-
-function Connector({ horizontal = false }: ConnectorProps) {
-  return (
-    <div className={`connector${horizontal ? " connector-horizontal" : ""}`} aria-hidden="true">
-      {horizontal ? <Icon name="arrows" size={17} /> : <Icon name="arrowDown" size={16} />}
+      <span className="flow-step-description">{description}</span>
     </div>
   );
 }
@@ -258,7 +188,7 @@ function App() {
 
     let nextStep = 0;
     const timer = window.setInterval(() => {
-      if (nextStep >= agents.length - 1) {
+      if (nextStep >= agentRoles.length - 1) {
         window.clearInterval(timer);
         setWorkflowRunning(false);
         return;
@@ -323,52 +253,46 @@ function App() {
           </div>
 
           <div className="flow-diagram">
-            <FlowNode
-              icon="users"
-              eyebrow="APPLICANTS"
-              title="Customers"
-              description="Individuals · Companies · Applicants"
-              variant="customer-node"
-            />
-
-            <div className="actor-exchange">
-              <FlowNode
-                icon="handshake"
-                eyebrow="INTERMEDIARIES"
-                title="Brokers"
-                description="Connect applicants with lenders"
-                variant="side-node"
+            <div className="flow-steps" aria-label="Credit application flow">
+              <FlowStep
+                number="01"
+                label="APPLICANT"
+                title="Customer"
+                description="Applies and gives consent"
               />
-              <Connector horizontal />
-              <FlowNode
-                icon="bank"
-                eyebrow="LENDERS"
-                title="Banks"
-                description="Own the lending decision"
-                variant="side-node"
+              <span className="flow-arrow" aria-hidden="true">→</span>
+              <FlowStep
+                number="02"
+                label="INTERMEDIARY"
+                title="Broker"
+                description="Matches with a lender"
+              />
+              <span className="flow-arrow" aria-hidden="true">→</span>
+              <FlowStep
+                number="03"
+                label="CREDIT HISTORY"
+                title="Credit Bureau"
+                description="Provides an authorized report"
+              />
+              <span className="flow-arrow" aria-hidden="true">→</span>
+              <FlowStep
+                number="04"
+                label="LENDER"
+                title="Bank"
+                description="Credit officer reviews and decides"
               />
             </div>
-
-            <Connector />
-            <FlowNode
-              icon="database"
-              eyebrow="CREDIT REPORTS · LIABILITIES · HISTORY · INQUIRIES"
-              title="The Credit Bureau"
-              description="A trusted source for authorized credit information"
-              variant="bureau-node"
-            />
-            <Connector />
 
             <div className="agents-panel">
               <div className="agents-panel-heading">
                 <div>
-                  <span className="section-index">COORDINATED AUTOMATION</span>
-                  <h3>AI agent orchestration</h3>
+                  <span className="section-index">SUPPORTING THE FLOW</span>
+                  <h3>AI agents</h3>
                 </div>
-                <span className="agent-count"><Icon name="spark" size={13} /> {agents.length} AGENTS</span>
+                <span className="agent-count"><Icon name="spark" size={13} /> {agentRoles.length} AGENTS</span>
               </div>
               <div className="agent-grid">
-                {agents.map((agent, index) => {
+                {agentRoles.map((agent, index) => {
                   const isActive = workflowRunning && currentStep === index;
                   const isComplete = workflowRunning && currentStep > index;
                   const isSelected = selectedAgent === index;
@@ -393,8 +317,8 @@ function App() {
               </div>
               {selectedAgent !== null && (
                 <div className="agent-detail" role="status">
-                  <Icon name={agents[selectedAgent].icon} size={16} />
-                  <span><strong>{agents[selectedAgent].name}</strong> — {agents[selectedAgent].description}</span>
+                  <Icon name={agentRoles[selectedAgent].icon} size={16} />
+                  <span><strong>{agentRoles[selectedAgent].name}</strong> — {agentRoles[selectedAgent].description}</span>
                   <button
                     className="detail-close"
                     type="button"
@@ -407,10 +331,8 @@ function App() {
               )}
             </div>
 
-            <Connector />
             <div className="infrastructure">
-              <span className="infrastructure-icon"><Icon name="workflow" size={17} /></span>
-              <strong>Backend &amp; infrastructure</strong>
+              <strong>Shared infrastructure</strong>
               <span>Web API <i /> SQL server <i /> Message bus <i /> Audit log</span>
             </div>
           </div>
@@ -440,6 +362,8 @@ function App() {
             ))}
           </div>
         </section>
+
+        <ApplicationPortfolio />
 
         <footer className="page-footer">
           <span>THE CREDIT BUREAU <span className="footer-divider">/</span> CREDIT FLOW PROTOTYPE</span>
