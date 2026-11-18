@@ -43,7 +43,11 @@ The schema, procedure, and seed scripts are safe to rerun. Runtime application, 
 
 Password-free demo identities are stored in the database for customer, broker, bank, credit bureau, credit officer, administrator, and regulator/auditor roles. Choose an identity in the header to change who is acting. The application portfolio and actor workspace filter records by the selected role; administrator and auditor views show aggregate or audit information only. These are demo client-side presentation rules, not authentication or production access control. See `docs\data-visibility.md` for the visibility matrix and limitations.
 
-The actor workspace provides a database-backed application flow. Administrators can drag to reorder, add, or remove supported actor steps, including repeat steps for an actor, up to eight steps total; every configured step must be approved to continue, and any rejection stops the application. The final human Credit Officer step is mandatory. A Credit Bureau approval prepares a fictional report only when the customer has consented. Workflow changes apply to new applications; open applications retain the workflow snapshot they started with. Administrators can also adjust per-application and per-bank caps, consent requirements, and required documents; auditors see a privacy-minimized event list. Limits and missing requirements block approvals but never make a lending decision automatically.
+The actor workspace provides a database-backed application flow. Administrators can drag to reorder, add, or remove supported actor steps, including repeat steps for an actor, up to eight steps total; every configured step must be approved to continue, and any rejection stops the application. The final human Credit Officer step is mandatory.
+
+A Credit Bureau approval prepares a fictional report only when the customer has consented. Workflow changes apply to new applications; open applications retain the workflow snapshot they started with.
+
+Administrators can also adjust per-application and per-bank caps, consent requirements, and required documents; auditors see a privacy-minimized event list. Limits and missing requirements block approvals but never make a lending decision automatically.
 
 ## Agents and instructions
 
@@ -58,3 +62,9 @@ This project does not connect to a real credit bureau or send notifications. The
 ![alt text](images/image-2.png)
 ![alt text](images/image-3.png)
 ![alt text](images/image-4.png)
+
+### Administrators can add / remove data flow steps
+![alt text](images/image-6.png)
+
+the new changes will be reflected for the new credit applications
+![alt text](images/image-5.png)
