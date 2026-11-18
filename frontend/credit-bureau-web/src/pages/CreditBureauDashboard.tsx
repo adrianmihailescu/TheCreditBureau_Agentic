@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import ApplicationPortfolio from "../features/applications/ApplicationPortfolio";
+import { demoAccounts } from "../features/accounts/demoAccounts";
 import { agentRoles } from "../features/agents/agentRoles";
 
 const iconShapes = {
@@ -178,10 +179,13 @@ function FlowStep({ number, label, title, description }: FlowStepProps) {
 }
 
 function App() {
+  const [activeAccountId, setActiveAccountId] = useState(demoAccounts[0].id);
   const [selectedAgent, setSelectedAgent] = useState<number | null>(null);
   const [workflowRunning, setWorkflowRunning] = useState(false);
   const [currentStep, setCurrentStep] = useState(-1);
   const [hasRun, setHasRun] = useState(false);
+  const [workflowStartedBy, setWorkflowStartedBy] = useState<string | null>(null);
+  const activeAccount = demoAccounts.find(({ id }) => id === activeAccountId) ?? demoAccounts[0];
 
   useEffect(() => {
     if (!workflowRunning) return undefined;
@@ -205,6 +209,9 @@ function App() {
     if (workflowRunning) return;
     setCurrentStep(0);
     setHasRun(true);
+    setWorkflowStartedBy(
+      `${activeAccount.name} · ${activeAccount.role} (${activeAccount.email})`,
+    );
     setWorkflowRunning(true);
   }
 
@@ -217,7 +224,21 @@ function App() {
         </a>
         <div className="topbar-right">
           <span className="environment-tag"><span className="status-dot" /> DEMO ENVIRONMENT</span>
-          <span className="avatar" aria-label="Credit Bureau">CB</span>
+          <label className="demo-account-switcher">
+            <span>ACTING AS</span>
+            <select
+              aria-label="Select demo actor account"
+              value={activeAccount.id}
+              disabled={workflowRunning}
+              onChange={(event) => setActiveAccountId(event.currentTarget.value)}
+            >
+              {demoAccounts.map((account) => (
+                <option key={account.id} value={account.id}>
+                  {account.name} · {account.role}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
       </header>
 
@@ -236,7 +257,7 @@ function App() {
             disabled={workflowRunning}
           >
             <Icon name={workflowRunning ? "workflow" : hasRun ? "check" : "spark"} size={16} />
-            {workflowRunning ? "Workflow running" : hasRun ? "Run again" : "Run demo flow"}
+            {workflowRunning ? "Workflow running" : activeAccount.action}
           </button>
         </section>
 
@@ -245,6 +266,11 @@ function App() {
             <div>
               <span className="section-index">01 / SYSTEM MAP</span>
               <h2 id="flow-title">The credit journey</h2>
+              <p className="workflow-actor">
+                {workflowStartedBy
+                  ? `Demo flow started by ${workflowStartedBy}.`
+                  : `Acting as ${activeAccount.name} · ${activeAccount.role} · ${activeAccount.email}`}
+              </p>
             </div>
             <span className={`live-badge${workflowRunning ? " live-badge-running" : ""}`}>
               <span className="status-dot" />

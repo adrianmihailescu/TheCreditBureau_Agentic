@@ -29,6 +29,8 @@ The frontend portfolio includes fictional customers, banks, brokers, application
 1. Apply `database\schema.sql` to an isolated SQL Server demo database.
 2. Apply `database\seed.sql` to add fictional sample records.
 
+The frontend includes password-free local demo identities for customer, broker, bank, credit bureau, credit officer, administrator, and regulator/auditor roles. Choose an identity in the header to change who is acting, then use its role-labeled button to animate the sample workflow. This is a demo role switcher, not authentication or access control.
+
 ## Agents and instructions
 
 VS Code custom agents are in `.github\agents\`; Copilot coding guidance is in `.github\instructions\`. Agent role descriptions and workflow notes are under `agents\`.

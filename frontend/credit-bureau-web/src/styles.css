@@ -82,6 +82,29 @@ a:focus-visible {
   gap: 16px;
 }
 
+.demo-account-switcher {
+  display: grid;
+  gap: 4px;
+}
+
+.demo-account-switcher > span {
+  color: #74869a;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.demo-account-switcher select {
+  max-width: 230px;
+  padding: 5px 25px 5px 8px;
+  color: #365b7d;
+  border: 1px solid #d5e4f1;
+  border-radius: 6px;
+  background: #f4f9fe;
+  font: inherit;
+  font-size: 10px;
+}
+
 .environment-tag,
 .live-badge,
 .agent-count {
@@ -230,6 +253,12 @@ h1 {
   font-size: 17px;
   font-weight: 650;
   letter-spacing: -0.035em;
+}
+
+.workflow-actor {
+  margin: 4px 0 0;
+  color: #647d94;
+  font-size: 9px;
 }
 
 .section-index {
@@ -853,6 +882,20 @@ h1 {
   line-height: 1.5;
 }
 
+.demo-account-switcher > span {
+  color: #70849a;
+}
+
+.demo-account-switcher select {
+  color: #315d85;
+  border-color: #d3e2ef;
+  background: #f4f9fe;
+}
+
+.workflow-actor {
+  color: #6b8195;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -906,12 +949,16 @@ h1 {
   }
 
   .topbar-right {
-    gap: 10px;
+    gap: 6px;
   }
 
   .environment-tag {
-    gap: 6px;
-    font-size: 7px;
+    display: none;
+  }
+
+  .demo-account-switcher select {
+    max-width: 165px;
+    font-size: 9px;
   }
 
   .intro {
@@ -1121,6 +1168,189 @@ h1 {
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+.brand {
+  font-size: 17px;
+}
+
+.demo-account-switcher > span,
+.section-index,
+.eyebrow,
+.live-badge,
+.agent-count {
+  font-size: 10px;
+}
+
+.demo-account-switcher select,
+.environment-tag {
+  font-size: 12px;
+}
+
+.intro-copy {
+  font-size: 15px;
+}
+
+.run-button {
+  font-size: 13px;
+}
+
+.flow-card-header h2,
+.actors-heading h2 {
+  font-size: 21px;
+}
+
+.workflow-actor {
+  font-size: 12px;
+}
+
+.flow-step-number {
+  font-size: 11px;
+}
+
+.flow-step-label {
+  font-size: 10px;
+}
+
+.flow-step strong,
+.agents-panel-heading h3 {
+  font-size: 16px;
+}
+
+.flow-step-description,
+.agent-name,
+.infrastructure > span:last-child,
+.infrastructure strong,
+.flow-card-footer,
+.actors-heading > p,
+.actor-card p,
+.portfolio-stat > span,
+.portfolio-stat small,
+.portfolio-table-heading h3,
+.applications-table td,
+.applications-table td strong,
+.consent-yes,
+.consent-no,
+.portfolio-disclaimer {
+  font-size: 12px;
+}
+
+.agent-status {
+  font-size: 9px;
+}
+
+.agent-detail,
+.actor-card h3,
+.portfolio-table-heading h3 {
+  font-size: 14px;
+}
+
+.actors-heading h2,
+.portfolio-heading h2 {
+  font-size: 23px;
+}
+
+.page-footer,
+.portfolio-stat small,
+.applications-table td small {
+  font-size: 11px;
+}
+
+.agent-item {
+  min-height: 38px;
+}
+
+.infrastructure {
+  min-height: 48px;
+}
+
+.flow-card-footer {
+  min-height: 44px;
+}
+
+.portfolio-stat strong {
+  font-size: 25px;
+}
+
+.applications-table th {
+  font-size: 10px;
+}
+
+.application-status,
+.status-filter select {
+  font-size: 11px;
+}
+
+.demo-data-tag {
+  font-size: 10px;
+}
+
+@media (max-width: 520px) {
+  .brand {
+    font-size: 14px;
+  }
+
+  .demo-account-switcher select,
+  .run-button {
+    font-size: 11px;
+  }
+
+  .intro-copy {
+    font-size: 14px;
+  }
+
+  .flow-card-header h2 {
+    font-size: 18px;
+  }
+
+  .flow-step-number {
+    font-size: 10px;
+  }
+
+  .flow-step-label {
+    font-size: 9px;
+  }
+
+  .flow-step strong,
+  .agents-panel-heading h3 {
+    font-size: 14px;
+  }
+
+  .flow-step-description,
+  .agent-name,
+  .actor-card p,
+  .portfolio-stat > span,
+  .portfolio-stat small,
+  .applications-table td,
+  .portfolio-disclaimer {
+    font-size: 11px;
+  }
+
+  .section-index,
+  .eyebrow,
+  .live-badge,
+  .agent-count,
+  .demo-data-tag {
+    font-size: 9px;
+  }
+
+  .agent-detail,
+  .actor-card h3 {
+    font-size: 13px;
+  }
+
+  .portfolio-heading h2,
+  .actors-heading h2 {
+    font-size: 19px;
+  }
+
+  .portfolio-stat strong {
+    font-size: 18px;
+  }
+
+  .applications-table th {
+    font-size: 9px;
   }
 }
 
@@ -1521,4 +1751,165 @@ h1 {
   color: #627b91;
   border-top-color: #dce8f2;
   background: #f1f7fc;
+}
+
+body .brand {
+  font-size: 17px;
+}
+
+body .demo-account-switcher > span,
+body .section-index,
+body .eyebrow,
+body .live-badge,
+body .agent-count {
+  font-size: 10px;
+}
+
+body .demo-account-switcher select,
+body .environment-tag,
+body .status-filter select {
+  font-size: 12px;
+}
+
+body .intro-copy {
+  font-size: 15px;
+}
+
+body .run-button {
+  font-size: 13px;
+}
+
+body .flow-card-header h2,
+body .actors-heading h2,
+body .portfolio-heading h2 {
+  font-size: 22px;
+}
+
+body .workflow-actor,
+body .flow-step-description,
+body .agent-name,
+body .infrastructure > span:last-child,
+body .infrastructure strong,
+body .flow-card-footer,
+body .actors-heading > p,
+body .actor-card p,
+body .portfolio-stat > span,
+body .applications-table td,
+body .applications-table td strong,
+body .consent-yes,
+body .consent-no,
+body .portfolio-disclaimer {
+  font-size: 12px;
+}
+
+body .flow-step-number {
+  font-size: 11px;
+}
+
+body .flow-step-label {
+  font-size: 10px;
+}
+
+body .flow-step strong,
+body .agents-panel-heading h3 {
+  font-size: 16px;
+}
+
+body .agent-detail,
+body .actor-card h3,
+body .portfolio-table-heading h3 {
+  font-size: 14px;
+}
+
+body .page-footer,
+body .applications-table td small,
+body .portfolio-stat small {
+  font-size: 11px;
+}
+
+body .portfolio-stat strong {
+  font-size: 25px;
+}
+
+body .applications-table th,
+body .demo-data-tag,
+body .application-status {
+  font-size: 10px;
+}
+
+body .agent-item {
+  min-height: 38px;
+}
+
+body .infrastructure {
+  min-height: 48px;
+}
+
+body .flow-card-footer {
+  min-height: 44px;
+}
+
+@media (max-width: 520px) {
+  body .brand {
+    font-size: 14px;
+  }
+
+  body .demo-account-switcher select,
+  body .run-button,
+  body .status-filter select {
+    font-size: 11px;
+  }
+
+  body .intro-copy {
+    font-size: 14px;
+  }
+
+  body .flow-card-header h2 {
+    font-size: 18px;
+  }
+
+  body .flow-step-number,
+  body .flow-step-label,
+  body .section-index,
+  body .eyebrow,
+  body .live-badge,
+  body .agent-count,
+  body .demo-data-tag {
+    font-size: 9px;
+  }
+
+  body .flow-step strong,
+  body .agents-panel-heading h3,
+  body .agent-detail,
+  body .actor-card h3,
+  body .portfolio-table-heading h3 {
+    font-size: 14px;
+  }
+
+  body .workflow-actor,
+  body .flow-step-description,
+  body .agent-name,
+  body .actor-card p,
+  body .portfolio-stat > span,
+  body .portfolio-stat small,
+  body .applications-table td,
+  body .applications-table td strong,
+  body .portfolio-disclaimer {
+    font-size: 11px;
+  }
+
+  body .flow-card-header h2,
+  body .actors-heading h2,
+  body .portfolio-heading h2 {
+    font-size: 19px;
+  }
+
+  body .portfolio-stat strong {
+    font-size: 18px;
+  }
+
+  body .applications-table th,
+  body .application-status {
+    font-size: 9px;
+  }
 }
