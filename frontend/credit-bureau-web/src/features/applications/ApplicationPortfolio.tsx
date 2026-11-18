@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import StatusBadge from "../../components/StatusBadge";
-import type { DemoAccount } from "../accounts/demoAccounts";
-import { getApplicationView, type ApplicationColumn } from "./access/applicationAccess";
+import type { DemoAccount } from "../accounts/types/demoAccount";
+import { getApplicationView } from "./access/applicationAccess";
+import type { ApplicationColumn } from "./access/types/applicationAccess";
 import { useDemoWorkflow } from "./workflow/DemoWorkflowContext";
 import type { ApplicationStatus, DemoApplicationRow } from "./models/application";
 

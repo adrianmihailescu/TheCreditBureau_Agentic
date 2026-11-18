@@ -1,12 +1,17 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
-import type { DemoAccount } from "../../accounts/demoAccounts";
+import { useEffect, useState, type FormEvent } from "react";
+import type { DemoAccount } from "../../accounts/types/demoAccount";
 import type {
   DemoApplicationRow,
   DemoDocumentType,
 } from "../models/application";
 import { documentTypes } from "../models/application";
 import { getApplicationView } from "../access/applicationAccess";
-import { useDemoWorkflow, type DemoDecision, type WorkflowActionResult } from "./DemoWorkflowContext";
+import { useDemoWorkflow } from "./DemoWorkflowContext";
+import type { DemoDecision, WorkflowActionResult } from "./types/workflowContext";
+import type {
+  ActorWorkspaceProps,
+  WorkflowRecordProps,
+} from "./types/actorWorkspace";
 import type { DemoFlowLimits } from "./workflowRules";
 
 const money = new Intl.NumberFormat("en-US", {
@@ -29,10 +34,6 @@ async function reportAction(
   } catch (error) {
     setMessage(getErrorMessage(error));
   }
-}
-
-interface ActorWorkspaceProps {
-  account: DemoAccount;
 }
 
 export default function ActorWorkspace({ account }: ActorWorkspaceProps) {
@@ -556,17 +557,6 @@ function AuditorWorkspace() {
       </div>
     </div>
   );
-}
-
-interface WorkflowRecordProps {
-  application: DemoApplicationRow;
-  details: string;
-  issues: string[];
-  action?: string;
-  actionDisabled?: boolean;
-  onAction?: () => void;
-  actions?: ReactNode;
-  showCustomer?: boolean;
 }
 
 function WorkflowRecord({

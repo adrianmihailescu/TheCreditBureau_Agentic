@@ -1,41 +1,12 @@
-import type { DemoAccount, DemoActorRole } from "../../accounts/demoAccounts";
+import type { DemoAccount } from "../../accounts/types/demoAccount";
 import type { DemoApplicationRow } from "../models/application";
+import type { DemoActorRole } from "../../accounts/types/demoAccount";
+import type {
+  ApplicationView,
+  RolePolicy,
+} from "./types/applicationAccess";
 
-export type ApplicationColumn =
-  | "application"
-  | "customer"
-  | "bank"
-  | "broker"
-  | "product"
-  | "amount"
-  | "report"
-  | "status"
-  | "consent";
-
-interface RolePolicy {
-  title: string;
-  description: string;
-  columns: readonly ApplicationColumn[];
-  showRecords: boolean;
-  canSeeAmounts: boolean;
-}
-
-export interface ApplicationView {
-  title: string;
-  description: string;
-  columns: readonly ApplicationColumn[];
-  showRecords: boolean;
-  canSeeAmounts: boolean;
-  records: DemoApplicationRow[];
-  summary: {
-    applicationCount: number;
-    consentCount: number;
-    bankCount: number;
-    reportCount: number;
-    statusCount: number;
-    requestedTotal: number;
-  };
-}
+export type { ApplicationColumn, ApplicationView } from "./types/applicationAccess";
 
 const policies = {
   Customer: {

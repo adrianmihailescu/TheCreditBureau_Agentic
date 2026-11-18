@@ -52,3 +52,9 @@ VS Code custom agents are in `.github\agents\`; Copilot coding guidance is in `.
 ## Prototype limitations
 
 This project does not connect to a real credit bureau or send notifications. The API accepts a demo-account ID from the client and is not authenticated; client-side role filtering is not security. Do not expose it to untrusted networks or use it for real applicant data. The sample credit indicators are fictional and must not be used to assess real applicants. Lending decisions belong to an authorized human credit officer.
+
+![alt text](images/image.png)
+![alt text](images/image-1.png)
+![alt text](images/image-2.png)
+![alt text](images/image-3.png)
+![alt text](images/image-4.png)

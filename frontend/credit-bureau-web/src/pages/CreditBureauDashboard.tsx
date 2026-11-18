@@ -3,6 +3,12 @@ import ApplicationPortfolio from "../features/applications/ApplicationPortfolio"
 import ActorWorkspace from "../features/applications/workflow/ActorWorkspace";
 import { agentRoles } from "../features/agents/agentRoles";
 import { useDemoWorkflow } from "../features/applications/workflow/DemoWorkflowContext";
+import type {
+  Actor,
+  FlowStepProps,
+  IconName,
+  IconProps,
+} from "./types/CreditBureauDashboard";
 
 const iconShapes = {
   users: (
@@ -88,21 +94,7 @@ const iconShapes = {
     </>
   ),
   check: <path d="m5 12 4 4L19 6" />,
-} satisfies Record<string, React.ReactNode>;
-
-type IconName = keyof typeof iconShapes;
-
-interface Actor {
-  name: string;
-  icon: IconName;
-  description: string;
-}
-
-interface IconProps {
-  name: IconName;
-  size?: number;
-  className?: string;
-}
+} satisfies Record<IconName, React.ReactNode>;
 
 function Icon({ name, size = 18, className = "" }: IconProps) {
   return (
@@ -160,13 +152,6 @@ const actors = [
     description: "Reviews compliance and audit records.",
   },
 ] satisfies Actor[];
-
-interface FlowStepProps {
-  number: string;
-  label: string;
-  title: string;
-  description: string;
-}
 
 function FlowStep({ number, label, title, description }: FlowStepProps) {
   return (
@@ -423,7 +408,6 @@ function App() {
         <ApplicationPortfolio account={activeAccount} />
         <footer className="page-footer">
           <span>THE CREDIT BUREAU <span className="footer-divider">/</span> CREDIT FLOW PROTOTYPE</span>
-          <span>Designed for transparency, built for trust.</span>
         </footer>
       </main>
     </div>
