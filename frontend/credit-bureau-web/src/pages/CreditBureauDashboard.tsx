@@ -389,7 +389,7 @@ function App() {
           </div>
         </section>
 
-        <ApplicationPortfolio />
+        <ApplicationPortfolio account={activeAccount} />
 
         <footer className="page-footer">
           <span>THE CREDIT BUREAU <span className="footer-divider">/</span> CREDIT FLOW PROTOTYPE</span>

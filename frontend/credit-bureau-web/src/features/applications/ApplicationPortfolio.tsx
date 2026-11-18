@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import StatusBadge from "../../components/StatusBadge";
+import type { DemoAccount } from "../accounts/demoAccounts";
 import { useDemoApplications } from "../../hooks/useDemoApplications";
+import { getApplicationView, type ApplicationColumn } from "./access/applicationAccess";
 import type { ApplicationStatus } from "./models/application";
 
 const statuses: readonly ("All applications" | ApplicationStatus)[] = [
@@ -18,50 +20,90 @@ const currency = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
-export default function ApplicationPortfolio() {
-  const applications = useDemoApplications();
+interface ApplicationPortfolioProps {
+  account: DemoAccount;
+}
+
+const columnLabels: Record<ApplicationColumn, string> = {
+  application: "Application",
+  customer: "Customer",
+  bank: "Bank",
+  broker: "Broker",
+  product: "Product",
+  amount: "Requested",
+  report: "Demo report",
+  status: "Status",
+  consent: "Consent",
+};
+
+export default function ApplicationPortfolio({ account }: ApplicationPortfolioProps) {
+  const view = getApplicationView(account, useDemoApplications());
   const [selectedStatus, setSelectedStatus] =
     useState<(typeof statuses)[number]>("All applications");
-  const filteredApplications = applications.filter(
+
+  useEffect(() => {
+    setSelectedStatus("All applications");
+  }, [account.id]);
+
+  const filteredApplications = view.records.filter(
     ({ status }) => selectedStatus === "All applications" || status === selectedStatus,
   );
-  const consentedCount = applications.filter(({ consentRecorded }) => consentRecorded).length;
 
   return (
     <section className="portfolio-section" aria-labelledby="portfolio-title">
       <div className="portfolio-heading">
         <div>
-          <span className="section-index">03 / SAMPLE RECORDS</span>
-          <h2 id="portfolio-title">Demo application portfolio</h2>
+          <span className="section-index">03 / ROLE-SCOPED VIEW</span>
+          <h2 id="portfolio-title">{view.title}</h2>
         </div>
         <span className="demo-data-tag">FICTIONAL DATA · NOT LIVE</span>
       </div>
+      <p className="portfolio-description">{view.description}</p>
 
       <div className="portfolio-stats">
         <article className="portfolio-stat">
-          <span>Total applications</span>
-          <strong>{applications.length}</strong>
-          <small>Across {new Set(applications.map(({ bank }) => bank.id)).size} demo lenders</small>
-        </article>
-        <article className="portfolio-stat">
-          <span>Requested credit</span>
-          <strong>
-            {currency.format(
-              applications.reduce((total, { requestedAmount }) => total + requestedAmount, 0),
-            )}
-          </strong>
-          <small>Illustrative amounts only</small>
+          <span>{view.showRecords ? "Applications in scope" : "Applications monitored"}</span>
+          <strong>{view.summary.applicationCount}</strong>
+          <small>{view.showRecords ? "Limited to this demo role" : "Aggregate count only"}</small>
         </article>
         <article className="portfolio-stat">
           <span>Consent recorded</span>
-          <strong>{consentedCount} / {applications.length}</strong>
-          <small>Demo record indicator; not legal evidence</small>
+          <strong>{view.summary.consentCount} / {view.summary.applicationCount}</strong>
+          <small>Demo indicator; not legal evidence</small>
+        </article>
+        <article className="portfolio-stat">
+          <span>
+            {view.canSeeAmounts
+              ? "Requested credit in scope"
+              : account.role === "Credit Bureau"
+                ? "Demo reports available"
+                : account.role === "Administrator"
+                  ? "Institutions"
+                  : "Status categories"}
+          </span>
+          <strong>
+            {view.canSeeAmounts
+              ? currency.format(view.summary.requestedTotal)
+              : account.role === "Credit Bureau"
+                ? view.summary.reportCount
+                : account.role === "Administrator"
+                  ? view.summary.bankCount
+                  : view.summary.statusCount}
+          </strong>
+          <small>
+            {view.canSeeAmounts
+              ? "For assigned applications only"
+              : account.role === "Credit Bureau"
+                ? "Consent-scoped sample data"
+                : "No customer-level details"}
+          </small>
         </article>
       </div>
 
+      {view.showRecords ? (
       <div className="portfolio-table-wrap">
         <div className="portfolio-table-heading">
-          <h3>Recent applications</h3>
+          <h3>{view.title}</h3>
           <label className="status-filter">
             <span className="visually-hidden">Filter by application status</span>
             <select
@@ -81,52 +123,74 @@ export default function ApplicationPortfolio() {
           <table className="applications-table">
             <thead>
               <tr>
-                <th scope="col">Application</th>
-                <th scope="col">Customer</th>
-                <th scope="col">Bank</th>
-                <th scope="col">Product</th>
-                <th scope="col">Requested</th>
-                <th scope="col">Demo report</th>
-                <th scope="col">Status</th>
-                <th scope="col">Consent</th>
+                {view.columns.map((column) => (
+                  <th scope="col" key={column}>{columnLabels[column]}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {filteredApplications.map((application) => (
                 <tr key={application.id}>
-                  <td>
-                    <strong>{application.id}</strong>
-                    <small>{application.submittedAt}</small>
-                  </td>
-                  <td>
-                    <strong>{application.customer.name}</strong>
-                    <small>{application.broker.organization}</small>
-                  </td>
-                  <td>{application.bank.name}</td>
-                  <td>{application.product}</td>
-                  <td>{currency.format(application.requestedAmount)}</td>
-                  <td>{application.report ? `Demo ${application.report.demoScore}` : "Not generated"}</td>
-                  <td>
-                    <StatusBadge status={application.status} />
-                  </td>
-                  <td>
-                    <span className={application.consentRecorded ? "consent-yes" : "consent-no"}>
-                      {application.consentRecorded ? "Recorded" : "Missing"}
-                    </span>
-                  </td>
+                  {view.columns.map((column) => (
+                    <td key={column}>
+                      {renderCell(column, application)}
+                    </td>
+                  ))}
                 </tr>
               ))}
               {filteredApplications.length === 0 && (
-                <tr><td className="empty-table" colSpan={8}>No demo applications match this filter.</td></tr>
+                <tr>
+                  <td className="empty-table" colSpan={view.columns.length}>
+                    No demo applications match this role and status filter.
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
         </div>
         <p className="portfolio-disclaimer">
           All names, organizations, application records, and report values are fictional seed data.
-          Demo credit indicators are not lending recommendations or decisions.
+          Demo role filtering is a UI convenience, not server-side authorization. Credit indicators
+          are fictional and are not lending recommendations or decisions.
         </p>
       </div>
+      ) : (
+        <p className="portfolio-disclaimer">
+          Individual application rows and credit details are not available in this role view.
+          Demo role filtering is a UI convenience, not server-side authorization.
+        </p>
+      )}
     </section>
   );
+}
+
+function renderCell(
+  column: ApplicationColumn,
+  application: ReturnType<typeof useDemoApplications>[number],
+) {
+  switch (column) {
+    case "application":
+      return <><strong>{application.id}</strong><small>{application.submittedAt}</small></>;
+    case "customer":
+      return application.customer.name;
+    case "bank":
+      return application.bank.name;
+    case "broker":
+      return application.broker.organization;
+    case "product":
+      return application.product;
+    case "amount":
+      return currency.format(application.requestedAmount);
+    case "report":
+      if (!application.consentRecorded) return "Consent required";
+      return application.report ? `Demo ${application.report.demoScore}` : "Not available";
+    case "status":
+      return <StatusBadge status={application.status} />;
+    case "consent":
+      return (
+        <span className={application.consentRecorded ? "consent-yes" : "consent-no"}>
+          {application.consentRecorded ? "Recorded" : "Missing"}
+        </span>
+      );
+  }
 }

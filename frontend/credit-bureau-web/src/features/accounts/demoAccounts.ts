@@ -14,6 +14,7 @@ export interface DemoAccount {
   email: string;
   organization: string;
   action: string;
+  scopeId?: string;
 }
 
 export const demoAccounts = [
@@ -24,6 +25,7 @@ export const demoAccounts = [
     email: "jordan.lee@example.test",
     organization: "Individual applicant",
     action: "Start application",
+    scopeId: "CUS-1001",
   },
   {
     id: "demo-broker",
@@ -32,6 +34,7 @@ export const demoAccounts = [
     email: "avery.brooks@example.test",
     organization: "Bridgeway Finance",
     action: "Submit to a bank",
+    scopeId: "BRK-201",
   },
   {
     id: "demo-bank",
@@ -40,6 +43,7 @@ export const demoAccounts = [
     email: "morgan.ellis@northstar.example.test",
     organization: "Northstar Community Bank",
     action: "Start bank review",
+    scopeId: "BNK-101",
   },
   {
     id: "demo-bureau",
@@ -56,6 +60,7 @@ export const demoAccounts = [
     email: "dana.scott@northstar.example.test",
     organization: "Northstar Community Bank",
     action: "Start officer review",
+    scopeId: "BNK-101",
   },
   {
     id: "demo-administrator",
