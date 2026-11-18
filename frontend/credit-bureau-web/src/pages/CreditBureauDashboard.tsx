@@ -3,6 +3,7 @@ import ApplicationPortfolio from "../features/applications/ApplicationPortfolio"
 import ActorWorkspace from "../features/applications/workflow/ActorWorkspace";
 import { agentRoles } from "../features/agents/agentRoles";
 import { useDemoWorkflow } from "../features/applications/workflow/DemoWorkflowContext";
+import type { WorkflowActorRole } from "../features/applications/models/application";
 import type {
   Actor,
   FlowStepProps,
@@ -153,6 +154,13 @@ const actors = [
   },
 ] satisfies Actor[];
 
+const workflowStepDetails: Record<WorkflowActorRole, { label: string; description: string }> = {
+  Broker: { label: "INTERMEDIARY", description: "Approval required before the next stage" },
+  Bank: { label: "LENDER", description: "Approval required before the next stage" },
+  "Credit Bureau": { label: "CREDIT HISTORY", description: "Consent required; approval prepares a fictional report" },
+  "Credit Officer": { label: "HUMAN REVIEW", description: "Required human final decision" },
+};
+
 function FlowStep({ number, label, title, description }: FlowStepProps) {
   return (
     <div className="flow-step">
@@ -302,27 +310,17 @@ function App() {
                 title="Customer"
                 description="Applies and gives consent"
               />
-              <span className="flow-arrow" aria-hidden="true">→</span>
-              <FlowStep
-                number="02"
-                label="INTERMEDIARY"
-                title="Broker"
-                description="Matches with a lender"
-              />
-              <span className="flow-arrow" aria-hidden="true">→</span>
-              <FlowStep
-                number="03"
-                label="CREDIT HISTORY"
-                title="Credit Bureau"
-                description="Provides an authorized report"
-              />
-              <span className="flow-arrow" aria-hidden="true">→</span>
-              <FlowStep
-                number="04"
-                label="LENDER"
-                title="Bank"
-                description="Credit officer reviews and decides"
-              />
+              {workflow.limits.workflowSteps.map((role, index) => (
+                <React.Fragment key={`${role}-${index}`}>
+                  <span className="flow-arrow" aria-hidden="true">→</span>
+                  <FlowStep
+                    number={String(index + 2).padStart(2, "0")}
+                    label={workflowStepDetails[role].label}
+                    title={role}
+                    description={workflowStepDetails[role].description}
+                  />
+                </React.Fragment>
+              ))}
             </div>
 
             <div className="agents-panel">

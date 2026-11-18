@@ -25,48 +25,25 @@ Content-Type: application/json
   "documentsProvided": ["Proof of identity", "Proof of income"]
 }
 
-### Route an application
-POST {{baseUrl}}/api/applications/{{newApplicationId}}/route-to-bank
+### Approve the current configured step
+POST {{baseUrl}}/api/applications/{{newApplicationId}}/workflow-decision
 Content-Type: application/json
 
 {
-  "actorAccountId": "demo-broker"
-}
-
-### Request a bureau report
-POST {{baseUrl}}/api/applications/{{newApplicationId}}/request-bureau-report
-Content-Type: application/json
-
-{
-  "actorAccountId": "demo-bank"
-}
-
-### Prepare a bureau report
-POST {{baseUrl}}/api/applications/{{newApplicationId}}/prepare-bureau-report
-Content-Type: application/json
-
-{
-  "actorAccountId": "demo-bureau"
-}
-
-### Send to officer
-POST {{baseUrl}}/api/applications/{{newApplicationId}}/send-to-officer
-Content-Type: application/json
-
-{
-  "actorAccountId": "demo-bank"
-}
-
-### Record a final officer decision
-POST {{baseUrl}}/api/applications/APP-2026-001/decision
-Content-Type: application/json
-
-{
-  "actorAccountId": "demo-credit-officer",
+  "actorAccountId": "demo-broker",
   "decision": "Approved"
 }
 
-### Persist workflow limits
+### Rejecting the current step stops the application
+POST {{baseUrl}}/api/applications/{{newApplicationId}}/workflow-decision
+Content-Type: application/json
+
+{
+  "actorAccountId": "demo-broker",
+  "decision": "Rejected"
+}
+
+### Persist workflow settings
 PUT {{baseUrl}}/api/workflow/limits
 Content-Type: application/json
 
@@ -75,7 +52,8 @@ Content-Type: application/json
   "maximumApplicationAmount": 50000,
   "bankExposureCap": 150000,
   "requireConsent": true,
-  "requiredDocuments": ["Proof of identity", "Proof of income"]
+  "requiredDocuments": ["Proof of identity", "Proof of income"],
+  "workflowSteps": ["Broker", "Bank", "Credit Bureau", "Credit Officer"]
 }
 
 ### Missing application returns 404

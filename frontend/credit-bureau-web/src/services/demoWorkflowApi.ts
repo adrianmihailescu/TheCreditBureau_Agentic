@@ -49,24 +49,13 @@ export function createApplication(
   return request<DemoApplicationRow>("/api/applications", jsonRequest("POST", application));
 }
 
-export function performApplicationAction(
-  applicationId: string,
-  action: "route-to-bank" | "request-bureau-report" | "send-to-officer" | "prepare-bureau-report",
-  actorAccountId: string,
-): Promise<DemoActionResponse> {
-  return request<DemoActionResponse>(
-    `/api/applications/${encodeURIComponent(applicationId)}/${action}`,
-    jsonRequest("POST", { actorAccountId }),
-  );
-}
-
-export function recordApplicationDecision(
+export function recordWorkflowDecision(
   applicationId: string,
   actorAccountId: string,
   decision: "Approved" | "Rejected",
 ): Promise<DemoActionResponse> {
   return request<DemoActionResponse>(
-    `/api/applications/${encodeURIComponent(applicationId)}/decision`,
+    `/api/applications/${encodeURIComponent(applicationId)}/workflow-decision`,
     jsonRequest("POST", { actorAccountId, decision }),
   );
 }

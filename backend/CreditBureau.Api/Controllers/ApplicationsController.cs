@@ -53,60 +53,16 @@ public sealed class ApplicationsController(IDemoWorkflowService service) : Contr
             : CreatedAtAction(nameof(GetById), new { id = application.Id }, application);
     }
 
-    /// <summary>Routes an eligible application from a broker to a bank.</summary>
-    [HttpPost("{id}/route-to-bank")]
+    /// <summary>Approves or rejects the application at its current configured workflow step.</summary>
+    [HttpPost("{id}/workflow-decision")]
     [ProducesResponseType<DemoWorkflowActionResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<DemoWorkflowActionResponse>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<DemoWorkflowActionResponse>(StatusCodes.Status409Conflict)]
-    public Task<IActionResult> RouteToBank(
+    public Task<IActionResult> RecordWorkflowDecision(
         string id,
-        DemoActorRequest request,
+        RecordDemoWorkflowDecisionRequest request,
         CancellationToken cancellationToken) =>
-        ExecuteAsync(service.RouteToBankAsync(id, request, cancellationToken));
-
-    /// <summary>Requests a bureau report for a consented bank application.</summary>
-    [HttpPost("{id}/request-bureau-report")]
-    [ProducesResponseType<DemoWorkflowActionResponse>(StatusCodes.Status200OK)]
-    [ProducesResponseType<DemoWorkflowActionResponse>(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType<DemoWorkflowActionResponse>(StatusCodes.Status409Conflict)]
-    public Task<IActionResult> RequestBureauReport(
-        string id,
-        DemoActorRequest request,
-        CancellationToken cancellationToken) =>
-        ExecuteAsync(service.RequestBureauReportAsync(id, request, cancellationToken));
-
-    /// <summary>Hands a bank application to its credit officer.</summary>
-    [HttpPost("{id}/send-to-officer")]
-    [ProducesResponseType<DemoWorkflowActionResponse>(StatusCodes.Status200OK)]
-    [ProducesResponseType<DemoWorkflowActionResponse>(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType<DemoWorkflowActionResponse>(StatusCodes.Status409Conflict)]
-    public Task<IActionResult> SendToOfficer(
-        string id,
-        DemoActorRequest request,
-        CancellationToken cancellationToken) =>
-        ExecuteAsync(service.SendToOfficerAsync(id, request, cancellationToken));
-
-    /// <summary>Prepares a fictional bureau report after a consented request.</summary>
-    [HttpPost("{id}/prepare-bureau-report")]
-    [ProducesResponseType<DemoWorkflowActionResponse>(StatusCodes.Status200OK)]
-    [ProducesResponseType<DemoWorkflowActionResponse>(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType<DemoWorkflowActionResponse>(StatusCodes.Status409Conflict)]
-    public Task<IActionResult> PrepareBureauReport(
-        string id,
-        DemoActorRequest request,
-        CancellationToken cancellationToken) =>
-        ExecuteAsync(service.PrepareBureauReportAsync(id, request, cancellationToken));
-
-    /// <summary>Records the credit officer's manual demo decision.</summary>
-    [HttpPost("{id}/decision")]
-    [ProducesResponseType<DemoWorkflowActionResponse>(StatusCodes.Status200OK)]
-    [ProducesResponseType<DemoWorkflowActionResponse>(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType<DemoWorkflowActionResponse>(StatusCodes.Status409Conflict)]
-    public Task<IActionResult> RecordDecision(
-        string id,
-        RecordDemoDecisionRequest request,
-        CancellationToken cancellationToken) =>
-        ExecuteAsync(service.RecordDecisionAsync(id, request, cancellationToken));
+        ExecuteAsync(service.RecordWorkflowDecisionAsync(id, request, cancellationToken));
 
     private async Task<IActionResult> ExecuteAsync(Task<DemoActionOutcome> operation)
     {

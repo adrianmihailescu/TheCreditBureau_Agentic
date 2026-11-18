@@ -2,6 +2,11 @@ namespace CreditBureau.Api.Application;
 
 public sealed class DemoWorkflowService(IDemoWorkflowRepository repository) : IDemoWorkflowService
 {
+    private const int MaximumWorkflowSteps = 8;
+
+    private static readonly string[] SupportedWorkflowRoles =
+        ["Broker", "Bank", "Credit Bureau", "Credit Officer"];
+
     private static readonly HashSet<string> KnownDocuments = new(
         ["Proof of identity", "Proof of income", "Business registration"],
         StringComparer.Ordinal);
@@ -48,93 +53,110 @@ public sealed class DemoWorkflowService(IDemoWorkflowRepository repository) : ID
             cancellationToken);
         return new(
             StatusCodes.Status201Created,
-            new(true, $"Application {id} submitted to the broker queue.", id));
+            new(true, $"Application {id} submitted to the {state.Limits.WorkflowSteps[0]} queue.", id));
     }
 
-    public Task<DemoActionOutcome> RouteToBankAsync(
+    public async Task<DemoActionOutcome> RecordWorkflowDecisionAsync(
         string id,
-        DemoActorRequest request,
-        CancellationToken cancellationToken) =>
-        TransitionAsync(
-            id,
-            request.ActorAccountId,
-            "Broker",
-            "Submitted",
-            "Bank review",
-            "Routed to bank",
-            prepareReport: false,
-            requireReport: false,
-            cancellationToken);
-
-    public Task<DemoActionOutcome> RequestBureauReportAsync(
-        string id,
-        DemoActorRequest request,
-        CancellationToken cancellationToken) =>
-        TransitionAsync(
-            id,
-            request.ActorAccountId,
-            "Bank",
-            "Bank review",
-            "Awaiting bureau report",
-            "Requested consented demo bureau report",
-            prepareReport: false,
-            requireReport: false,
-            cancellationToken,
-            requireConsent: true);
-
-    public Task<DemoActionOutcome> SendToOfficerAsync(
-        string id,
-        DemoActorRequest request,
-        CancellationToken cancellationToken) =>
-        TransitionAsync(
-            id,
-            request.ActorAccountId,
-            "Bank",
-            "Bank review",
-            "Awaiting officer",
-            "Sent to Credit Officer",
-            prepareReport: false,
-            requireReport: true,
-            cancellationToken);
-
-    public Task<DemoActionOutcome> PrepareBureauReportAsync(
-        string id,
-        DemoActorRequest request,
-        CancellationToken cancellationToken) =>
-        TransitionAsync(
-            id,
-            request.ActorAccountId,
-            "Credit Bureau",
-            "Awaiting bureau report",
-            "Awaiting officer",
-            "Prepared consented demo bureau report",
-            prepareReport: true,
-            requireReport: false,
-            cancellationToken,
-            requireConsent: true);
-
-    public Task<DemoActionOutcome> RecordDecisionAsync(
-        string id,
-        RecordDemoDecisionRequest request,
+        RecordDemoWorkflowDecisionRequest request,
         CancellationToken cancellationToken)
     {
         if (request.Decision is not ("Approved" or "Rejected"))
         {
-            return Task.FromResult(Failure(
+            return Failure(
                 StatusCodes.Status400BadRequest,
-                "Choose Approved or Rejected."));
+                "Choose Approved or Rejected.");
         }
 
-        return TransitionAsync(
+        var state = await repository.GetStateAsync(cancellationToken);
+        var account = state.Accounts.FirstOrDefault(item => item.Id == request.ActorAccountId);
+        var application = state.Applications.FirstOrDefault(item => item.Id == id);
+        if (application is null)
+        {
+            return Failure(StatusCodes.Status404NotFound, "Application not found.");
+        }
+
+        if (application.Status is "Approved" or "Rejected")
+        {
+            return Failure(StatusCodes.Status409Conflict, "A completed application cannot continue.");
+        }
+
+        if (application.CurrentWorkflowStepIndex < 0 ||
+            application.CurrentWorkflowStepIndex >= application.WorkflowSteps.Count)
+        {
+            return Failure(StatusCodes.Status409Conflict, "The application has no active workflow step.");
+        }
+
+        var actorRole = application.WorkflowSteps[application.CurrentWorkflowStepIndex];
+        if (account?.Role != actorRole)
+        {
+            return Failure(StatusCodes.Status403Forbidden, $"A {actorRole} demo account is required.");
+        }
+
+        if (!HasActorScope(account, application, request.Decision == "Rejected"))
+        {
+            return Failure(StatusCodes.Status403Forbidden, "This application is outside the selected actor's scope.");
+        }
+
+        var approving = request.Decision == "Approved";
+        if (approving)
+        {
+            var issues = GetApplicationIssues(application, state.Applications, state.Limits);
+            if (issues.Count > 0)
+            {
+                return Failure(StatusCodes.Status409Conflict, string.Join(" ", issues));
+            }
+
+            if (actorRole == "Credit Bureau" && !application.ConsentRecorded)
+            {
+                return Failure(
+                    StatusCodes.Status409Conflict,
+                    "Recorded customer consent is required before preparing a bureau report.");
+            }
+
+            if (actorRole == "Credit Officer" &&
+                application.WorkflowSteps.Contains("Credit Bureau", StringComparer.Ordinal) &&
+                !application.ReportPrepared)
+            {
+                return Failure(
+                    StatusCodes.Status409Conflict,
+                    "The configured bureau step must prepare its consented report before officer review.");
+            }
+        }
+
+        var isFinalStep = application.CurrentWorkflowStepIndex == application.WorkflowSteps.Count - 1;
+        var nextStepIndex = approving && !isFinalStep
+            ? application.CurrentWorkflowStepIndex + 1
+            : application.WorkflowSteps.Count;
+        var nextStatus = request.Decision == "Rejected"
+            ? "Rejected"
+            : isFinalStep
+                ? "Approved"
+                : GetStatusForRole(application.WorkflowSteps[nextStepIndex]);
+        var prepareReport = approving && actorRole == "Credit Bureau" && !application.ReportPrepared;
+        var action = prepareReport
+            ? "Credit Bureau prepared a consented demo report and approved the workflow step"
+            : $"{actorRole} recorded a demo {request.Decision.ToLowerInvariant()} decision";
+
+        var updated = await repository.TryTransitionApplicationAsync(
             id,
+            application.Status,
+            application.CurrentWorkflowStepIndex,
+            actorRole,
+            nextStatus,
+            nextStepIndex,
             request.ActorAccountId,
-            "Credit Officer",
-            "Awaiting officer",
-            request.Decision,
-            $"Credit Officer recorded a demo {request.Decision.ToLowerInvariant()} decision",
-            prepareReport: false,
-            requireReport: false,
+            action,
+            prepareReport,
             cancellationToken);
+
+        return updated
+            ? Success(request.Decision == "Rejected"
+                ? $"{actorRole} rejected the application; the workflow has stopped."
+                : isFinalStep
+                    ? "Credit Officer approved the application."
+                    : $"{actorRole} approved the step; the application moved to {application.WorkflowSteps[nextStepIndex]}.")
+            : Failure(StatusCodes.Status409Conflict, "Application status changed; reload and try again.");
     }
 
     public async Task<DemoActionOutcome> UpdateLimitsAsync(
@@ -153,79 +175,35 @@ public sealed class DemoWorkflowService(IDemoWorkflowRepository repository) : ID
             return Failure(StatusCodes.Status400BadRequest, "The settings include an unknown document type.");
         }
 
+        if (request.WorkflowSteps.Count is 0 or > MaximumWorkflowSteps ||
+            request.WorkflowSteps.Any(role => !SupportedWorkflowRoles.Contains(role, StringComparer.Ordinal)) ||
+            request.WorkflowSteps.Count(role => role == "Credit Officer") != 1)
+        {
+            return Failure(
+                StatusCodes.Status400BadRequest,
+                "Choose up to eight workflow steps from Broker, Bank, and Credit Bureau, with one final Credit Officer step.");
+        }
+
+        if (request.WorkflowSteps[^1] != "Credit Officer")
+        {
+            return Failure(
+                StatusCodes.Status400BadRequest,
+                "The final workflow step must be a human Credit Officer approval.");
+        }
+
         await repository.UpdateLimitsAsync(request.ActorAccountId, request, cancellationToken);
-        return Success("Demo workflow limits saved to SQL Server.");
+        return Success("Demo workflow settings saved to SQL Server.");
     }
 
-    private async Task<DemoActionOutcome> TransitionAsync(
-        string id,
-        string actorAccountId,
-        string requiredRole,
-        string expectedStatus,
-        string nextStatus,
-        string action,
-        bool prepareReport,
-        bool requireReport,
-        CancellationToken cancellationToken,
-        bool requireConsent = false)
-    {
-        var state = await repository.GetStateAsync(cancellationToken);
-        var account = state.Accounts.FirstOrDefault(item => item.Id == actorAccountId);
-        if (account?.Role != requiredRole)
+    private static string GetStatusForRole(string role) =>
+        role switch
         {
-            return Failure(StatusCodes.Status403Forbidden, $"A {requiredRole} demo account is required.");
-        }
-
-        var application = state.Applications.FirstOrDefault(item => item.Id == id);
-        if (application is null)
-        {
-            return Failure(StatusCodes.Status404NotFound, "Application not found.");
-        }
-
-        if (application.Status != expectedStatus)
-        {
-            return Failure(StatusCodes.Status409Conflict, $"Application must be in {expectedStatus} status.");
-        }
-
-        if (!HasActorScope(account, application))
-        {
-            return Failure(StatusCodes.Status403Forbidden, "This application is outside the selected actor's scope.");
-        }
-
-        if (requireConsent && !application.ConsentRecorded)
-        {
-            return Failure(StatusCodes.Status409Conflict, "Recorded customer consent is required for a bureau report.");
-        }
-
-        if (requireReport && application.ConsentRecorded && !application.ReportPrepared)
-        {
-            return Failure(StatusCodes.Status409Conflict, "Request and prepare the consented bureau report before officer review.");
-        }
-
-        var issues = GetApplicationIssues(application, state.Applications, state.Limits);
-        if (issues.Count > 0)
-        {
-            return Failure(StatusCodes.Status409Conflict, string.Join(" ", issues));
-        }
-
-        if (prepareReport && !application.ConsentRecorded)
-        {
-            return Failure(StatusCodes.Status409Conflict, "A demo report cannot be prepared without recorded consent.");
-        }
-
-        var updated = await repository.TryTransitionApplicationAsync(
-            id,
-            expectedStatus,
-            nextStatus,
-            actorAccountId,
-            action,
-            prepareReport,
-            cancellationToken);
-
-        return updated
-            ? Success(action)
-            : Failure(StatusCodes.Status409Conflict, "Application status changed; reload and try again.");
-    }
+            "Broker" => "Submitted",
+            "Bank" => "Bank review",
+            "Credit Bureau" => "Awaiting bureau report",
+            "Credit Officer" => "Awaiting officer",
+            _ => throw new InvalidOperationException($"Unsupported workflow actor role: {role}.")
+        };
 
     private static IReadOnlyList<string> GetApplicationIssues(
         DemoApplicationResponse application,
@@ -262,13 +240,16 @@ public sealed class DemoWorkflowService(IDemoWorkflowRepository repository) : ID
         return issues;
     }
 
-    private static bool HasActorScope(DemoAccountResponse account, DemoApplicationResponse application) =>
+    private static bool HasActorScope(
+        DemoAccountResponse account,
+        DemoApplicationResponse application,
+        bool isRejection) =>
         account.Role switch
         {
             "Broker" => account.ScopeId == application.BrokerId,
             "Bank" or "Credit Officer" => account.ScopeId == application.BankId,
             "Customer" => account.ScopeId == application.CustomerId,
-            "Credit Bureau" => application.ConsentRecorded,
+            "Credit Bureau" => application.ConsentRecorded || isRejection,
             _ => false,
         };
 

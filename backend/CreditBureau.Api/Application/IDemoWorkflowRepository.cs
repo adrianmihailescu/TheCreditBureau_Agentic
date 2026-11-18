@@ -13,7 +13,10 @@ public interface IDemoWorkflowRepository
     Task<bool> TryTransitionApplicationAsync(
         string applicationId,
         string expectedStatus,
+        int expectedStepIndex,
+        string expectedActorRole,
         string nextStatus,
+        int nextStepIndex,
         string actorAccountId,
         string action,
         bool prepareReport,

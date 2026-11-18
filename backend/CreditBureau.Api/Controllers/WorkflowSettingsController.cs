@@ -8,7 +8,7 @@ namespace CreditBureau.Api.Controllers;
 [Route("api/workflow/limits")]
 public sealed class WorkflowSettingsController(IDemoWorkflowService service) : ControllerBase
 {
-    /// <summary>Saves workflow caps and required prerequisites.</summary>
+    /// <summary>Saves workflow steps, caps, and required prerequisites.</summary>
     [HttpPut]
     [ProducesResponseType<DemoWorkflowActionResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<DemoWorkflowActionResponse>(StatusCodes.Status400BadRequest)]

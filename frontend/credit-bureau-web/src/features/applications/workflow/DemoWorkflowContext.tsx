@@ -10,8 +10,7 @@ import type { DemoApplicationRow } from "../models/application";
 import {
   createApplication,
   getDemoState,
-  performApplicationAction,
-  recordApplicationDecision,
+  recordWorkflowDecision as recordWorkflowDecisionRequest,
   saveWorkflowLimits,
 } from "../../../services/demoWorkflowApi";
 import type {
@@ -82,22 +81,12 @@ export function DemoWorkflowProvider({ children }: { children: ReactNode }) {
     return application.id;
   }
 
-  async function performAction(
-    account: DemoAccount,
-    applicationId: string,
-    action: "route-to-bank" | "request-bureau-report" | "send-to-officer" | "prepare-bureau-report",
-  ): Promise<WorkflowActionResult> {
-    const result = await performApplicationAction(applicationId, action, account.id);
-    await refreshState();
-    return toWorkflowResult(result);
-  }
-
-  async function recordDecision(
+  async function recordWorkflowDecision(
     account: DemoAccount,
     applicationId: string,
     decision: DemoDecision,
   ): Promise<WorkflowActionResult> {
-    const result = await recordApplicationDecision(applicationId, account.id, decision);
+    const result = await recordWorkflowDecisionRequest(applicationId, account.id, decision);
     await refreshState();
     return toWorkflowResult(result);
   }
@@ -127,11 +116,7 @@ export function DemoWorkflowProvider({ children }: { children: ReactNode }) {
         isLoading,
         loadError,
         submitApplication,
-        routeToBank: (account, id) => performAction(account, id, "route-to-bank"),
-        requestBureauReport: (account, id) => performAction(account, id, "request-bureau-report"),
-        sendToOfficer: (account, id) => performAction(account, id, "send-to-officer"),
-        prepareBureauReport: (account, id) => performAction(account, id, "prepare-bureau-report"),
-        recordDecision,
+        recordWorkflowDecision,
         updateLimits,
         getIssues,
       }}

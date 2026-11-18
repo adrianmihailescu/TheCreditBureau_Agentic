@@ -28,11 +28,7 @@ export interface DemoWorkflowContextValue {
     account: DemoAccount,
     input: Omit<NewDemoApplication, "customerAccountId">,
   ) => Promise<string>;
-  routeToBank: (account: DemoAccount, applicationId: string) => Promise<WorkflowActionResult>;
-  requestBureauReport: (account: DemoAccount, applicationId: string) => Promise<WorkflowActionResult>;
-  sendToOfficer: (account: DemoAccount, applicationId: string) => Promise<WorkflowActionResult>;
-  prepareBureauReport: (account: DemoAccount, applicationId: string) => Promise<WorkflowActionResult>;
-  recordDecision: (
+  recordWorkflowDecision: (
     account: DemoAccount,
     applicationId: string,
     decision: DemoDecision,

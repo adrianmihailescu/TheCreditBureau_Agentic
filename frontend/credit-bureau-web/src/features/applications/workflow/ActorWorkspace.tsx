@@ -1,13 +1,14 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type DragEvent, type FormEvent } from "react";
 import type { DemoAccount } from "../../accounts/types/demoAccount";
 import type {
   DemoApplicationRow,
   DemoDocumentType,
+  WorkflowActorRole,
 } from "../models/application";
-import { documentTypes } from "../models/application";
+import { documentTypes, workflowActorRoles } from "../models/application";
 import { getApplicationView } from "../access/applicationAccess";
 import { useDemoWorkflow } from "./DemoWorkflowContext";
-import type { DemoDecision, WorkflowActionResult } from "./types/workflowContext";
+import type { DemoDecision } from "./types/workflowContext";
 import type {
   ActorWorkspaceProps,
   WorkflowRecordProps,
@@ -20,20 +21,14 @@ const money = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
+const maximumWorkflowSteps = 8;
+type AddableWorkflowStepRole = Exclude<WorkflowActorRole, "Credit Officer">;
+const addableWorkflowStepRoles = workflowActorRoles.filter(
+  (role): role is AddableWorkflowStepRole => role !== "Credit Officer",
+);
+
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "The database request failed.";
-}
-
-async function reportAction(
-  action: Promise<WorkflowActionResult>,
-  setMessage: (message: string) => void,
-): Promise<void> {
-  try {
-    const result = await action;
-    setMessage(result.message);
-  } catch (error) {
-    setMessage(getErrorMessage(error));
-  }
 }
 
 export default function ActorWorkspace({ account }: ActorWorkspaceProps) {
@@ -54,16 +49,16 @@ export default function ActorWorkspace({ account }: ActorWorkspaceProps) {
         <CustomerWorkspace account={account} />
       )}
       {account.role === "Broker" && (
-        <BrokerWorkspace applications={scopedRows} account={account} />
+        <ActorApprovalWorkspace applications={scopedRows} account={account} role="Broker" />
       )}
       {account.role === "Bank" && (
-        <BankWorkspace applications={scopedRows} account={account} />
+        <ActorApprovalWorkspace applications={scopedRows} account={account} role="Bank" />
       )}
       {account.role === "Credit Bureau" && (
-        <BureauWorkspace applications={scopedRows} account={account} />
+        <ActorApprovalWorkspace applications={scopedRows} account={account} role="Credit Bureau" />
       )}
       {account.role === "Credit Officer" && (
-        <CreditOfficerWorkspace applications={scopedRows} account={account} />
+        <ActorApprovalWorkspace applications={scopedRows} account={account} role="Credit Officer" />
       )}
       {account.role === "Administrator" && (
         <AdministratorWorkspace account={account} />
@@ -112,7 +107,7 @@ function CustomerWorkspace({ account }: { account: DemoAccount }) {
         consentRecorded,
         documentsProvided,
       });
-      setMessage(`Application ${applicationId} submitted to your broker's queue.`);
+      setMessage(`Application ${applicationId} submitted to the first configured workflow step.`);
     } catch (error) {
       setMessage(getErrorMessage(error));
     } finally {
@@ -203,161 +198,27 @@ function CustomerWorkspace({ account }: { account: DemoAccount }) {
   );
 }
 
-function BrokerWorkspace({
+function ActorApprovalWorkspace({
   applications,
   account,
+  role,
 }: {
   applications: DemoApplicationRow[];
   account: DemoAccount;
+  role: WorkflowActorRole;
 }) {
-  const { routeToBank, getIssues, limits } = useDemoWorkflow();
-  const [message, setMessage] = useState("");
-
-  return (
-    <div className="workspace-panel">
-      <div className="workspace-panel-heading">
-        <div>
-          <h3>Broker submission queue</h3>
-          <p>Route eligible customer applications to their selected bank.</p>
-        </div>
-        <span className="workspace-limit">Per-bank cap: {money.format(limits.bankExposureCap)}</span>
-      </div>
-      <div className="workspace-record-list">
-        {applications.map((application) => {
-          const issues = getIssues(application);
-          const canRoute = application.status === "Submitted" && issues.length === 0;
-          return (
-            <WorkflowRecord
-              key={application.id}
-              application={application}
-              details={`${application.customer.name} · ${application.bank.name} · ${money.format(application.requestedAmount)}`}
-              issues={issues}
-              action={application.status === "Submitted" ? "Submit to bank" : undefined}
-              actionDisabled={!canRoute}
-              onAction={() => { void reportAction(routeToBank(account, application.id), setMessage); }}
-            />
-          );
-        })}
-        {applications.length === 0 && <EmptyWorkspace>No applications are assigned to this broker.</EmptyWorkspace>}
-      </div>
-      {message && <p className="workflow-feedback" role="status">{message}</p>}
-    </div>
-  );
-}
-
-function BankWorkspace({
-  applications,
-  account,
-}: {
-  applications: DemoApplicationRow[];
-  account: DemoAccount;
-}) {
-  const { requestBureauReport, sendToOfficer, getIssues, limits } = useDemoWorkflow();
-  const [message, setMessage] = useState("");
-
-  return (
-    <div className="workspace-panel">
-      <div className="workspace-panel-heading">
-        <div>
-          <h3>Bank intake and review</h3>
-          <p>Check configured limits and prerequisites before handing off to the bureau or officer.</p>
-        </div>
-        <span className="workspace-limit">Max per application: {money.format(limits.maximumApplicationAmount)}</span>
-      </div>
-      <div className="workspace-record-list">
-        {applications.map((application) => {
-          const issues = getIssues(application);
-          const canAct = application.status === "Bank review" && issues.length === 0;
-          return (
-            <WorkflowRecord
-              key={application.id}
-              application={application}
-              details={`${application.customer.name} · ${application.product} · ${money.format(application.requestedAmount)}`}
-              issues={issues}
-              action={application.status === "Bank review"
-                ? application.consentRecorded && !application.reportPrepared
-                  ? "Request bureau report"
-                  : "Send to Credit Officer"
-                : undefined}
-              actionDisabled={!canAct}
-              onAction={() => {
-                const action = application.consentRecorded && !application.reportPrepared
-                  ? requestBureauReport(account, application.id)
-                  : sendToOfficer(account, application.id);
-                void reportAction(action, setMessage);
-              }}
-            />
-          );
-        })}
-        {applications.length === 0 && <EmptyWorkspace>No applications are assigned to this bank.</EmptyWorkspace>}
-      </div>
-      {message && <p className="workflow-feedback" role="status">{message}</p>}
-    </div>
-  );
-}
-
-function BureauWorkspace({
-  applications,
-  account,
-}: {
-  applications: DemoApplicationRow[];
-  account: DemoAccount;
-}) {
-  const { prepareBureauReport, getIssues } = useDemoWorkflow();
-  const [message, setMessage] = useState("");
-
-  return (
-    <div className="workspace-panel">
-      <div className="workspace-panel-heading">
-        <div>
-          <h3>Consented bureau requests</h3>
-          <p>Only consented applications are listed; this demo does not connect to a real bureau.</p>
-        </div>
-      </div>
-      <div className="workspace-record-list">
-        {applications
-          .filter(({ status }) => status === "Awaiting bureau report")
-          .map((application) => {
-            const issues = getIssues(application);
-            return (
-              <WorkflowRecord
-                key={application.id}
-                application={application}
-                details={`${application.product} · Consent recorded`}
-                issues={issues}
-                action="Prepare fictional report"
-                actionDisabled={issues.length > 0}
-                onAction={() => {
-                  void reportAction(prepareBureauReport(account, application.id), setMessage);
-                }}
-                showCustomer={false}
-              />
-            );
-          })}
-        {!applications.some(({ status }) => status === "Awaiting bureau report") && (
-          <EmptyWorkspace>No consented applications are waiting for a bureau report.</EmptyWorkspace>
-        )}
-      </div>
-      {message && <p className="workflow-feedback" role="status">{message}</p>}
-    </div>
-  );
-}
-
-function CreditOfficerWorkspace({
-  applications,
-  account,
-}: {
-  applications: DemoApplicationRow[];
-  account: DemoAccount;
-}) {
-  const { recordDecision, getIssues } = useDemoWorkflow();
+  const { recordWorkflowDecision, getIssues } = useDemoWorkflow();
   const [acknowledged, setAcknowledged] = useState(false);
   const [message, setMessage] = useState("");
-  const reviewQueue = applications.filter(({ status }) => status === "Awaiting officer");
+  const reviewQueue = applications.filter((application) =>
+    application.status !== "Approved" &&
+    application.status !== "Rejected" &&
+    application.workflowSteps[application.currentWorkflowStepIndex] === role,
+  );
 
   async function decide(applicationId: string, decision: DemoDecision) {
     try {
-      const result = await recordDecision(account, applicationId, decision);
+      const result = await recordWorkflowDecision(account, applicationId, decision);
       setMessage(result.message);
       if (result.success) setAcknowledged(false);
     } catch (error) {
@@ -369,51 +230,75 @@ function CreditOfficerWorkspace({
     <div className="workspace-panel">
       <div className="workspace-panel-heading">
         <div>
-          <h3>Credit Officer decision queue</h3>
-          <p>Final decisions are manual. No score, agent, or limit automatically approves or rejects.</p>
+          <h3>{role} approval queue</h3>
+          <p>
+            {role === "Credit Officer"
+              ? "Final lending decisions require a human credit officer."
+              : role === "Credit Bureau"
+                ? "Approval prepares a fictional report using customer consent; no real bureau is contacted."
+                : "Approve to continue or reject to stop the application flow."}
+          </p>
         </div>
       </div>
-      <label className="workflow-check decision-acknowledgement">
-        <input
-          type="checkbox"
-          checked={acknowledged}
-          onChange={(event) => setAcknowledged(event.currentTarget.checked)}
-        />
-        I am recording a human-reviewed demo decision as the Credit Officer.
-      </label>
+      {role === "Credit Officer" && (
+        <label className="workflow-check decision-acknowledgement">
+          <input
+            type="checkbox"
+            checked={acknowledged}
+            onChange={(event) => setAcknowledged(event.currentTarget.checked)}
+          />
+          I am recording a human-reviewed demo decision as the Credit Officer.
+        </label>
+      )}
       <div className="workspace-record-list">
         {reviewQueue.map((application) => {
           const issues = getIssues(application);
+          const needsBureauReport = role === "Credit Officer" &&
+            application.workflowSteps.includes("Credit Bureau") &&
+            application.consentRecorded &&
+            !application.reportPrepared;
+          const needsConsent = role === "Credit Bureau" && !application.consentRecorded;
           return (
             <WorkflowRecord
               key={application.id}
               application={application}
-              details={`${application.customer.name} · ${application.product} · ${money.format(application.requestedAmount)} · ${application.report ? `Demo report ${application.report.demoScore}` : application.reportPrepared ? "Demo report prepared" : "No report"}`}
+              details={role === "Credit Bureau"
+                ? `${application.product} · ${application.consentRecorded ? "Consent recorded" : "No consent recorded"}`
+                : `${application.customer.name} · ${application.product} · ${money.format(application.requestedAmount)}${role === "Credit Officer" ? ` · ${application.report ? `Demo report ${application.report.demoScore}` : application.reportPrepared ? "Demo report prepared" : "No report"}` : ""}`}
               issues={issues}
               actions={(
                 <div className="decision-actions">
                   <button
                     className="workflow-primary-button"
                     type="button"
-                    disabled={!acknowledged || issues.length > 0}
+                    disabled={issues.length > 0 || needsBureauReport || needsConsent || (role === "Credit Officer" && !acknowledged)}
                     onClick={() => decide(application.id, "Approved")}
                   >
-                    Record demo approval
+                    {role === "Credit Bureau"
+                      ? application.reportPrepared
+                        ? "Approve & continue"
+                        : "Prepare report & approve"
+                      : role === "Credit Officer"
+                        ? "Record human approval"
+                        : "Approve & continue"}
                   </button>
                   <button
                     className="workflow-secondary-button"
                     type="button"
-                    disabled={!acknowledged || issues.length > 0}
+                    disabled={role === "Credit Officer" && !acknowledged}
                     onClick={() => decide(application.id, "Rejected")}
                   >
-                    Record demo rejection
+                    Reject & stop flow
                   </button>
                 </div>
               )}
+              showCustomer={role !== "Credit Bureau"}
             />
           );
         })}
-        {reviewQueue.length === 0 && <EmptyWorkspace>No applications are awaiting this officer.</EmptyWorkspace>}
+        {reviewQueue.length === 0 && (
+          <EmptyWorkspace>{`No applications are waiting for ${role} approval.`}</EmptyWorkspace>
+        )}
       </div>
       {message && <p className="workflow-feedback" role="status">{message}</p>}
     </div>
@@ -423,11 +308,11 @@ function CreditOfficerWorkspace({
 function AdministratorWorkspace({ account }: { account: DemoAccount }) {
   const { limits, updateLimits, applications, banks } = useDemoWorkflow();
   const [formLimits, setFormLimits] = useState<DemoFlowLimits>(limits);
+  const [stepRoleToAdd, setStepRoleToAdd] = useState<AddableWorkflowStepRole>("Broker");
+  const [draggedStepIndex, setDraggedStepIndex] = useState<number | null>(null);
   const [message, setMessage] = useState("");
-
-  useEffect(() => {
-    setFormLimits(limits);
-  }, [limits]);
+  const [stepMessage, setStepMessage] = useState("");
+  const [isSavingSteps, setIsSavingSteps] = useState(false);
 
   function toggleRequiredDocument(document: DemoDocumentType) {
     setFormLimits((current) => ({
@@ -436,6 +321,60 @@ function AdministratorWorkspace({ account }: { account: DemoAccount }) {
         ? current.requiredDocuments.filter((item) => item !== document)
         : [...current.requiredDocuments, document],
     }));
+  }
+
+  const selectedRoleToAdd = stepRoleToAdd;
+
+  function moveStep(fromIndex: number, toIndex: number) {
+    setFormLimits((current) => {
+      const steps = [...current.workflowSteps];
+      const [moved] = steps.splice(fromIndex, 1);
+      if (!moved) return current;
+      steps.splice(toIndex, 0, moved);
+      return { ...current, workflowSteps: steps };
+    });
+  }
+
+  function handleStepDrop(event: DragEvent<HTMLLIElement>, targetIndex: number) {
+    event.preventDefault();
+    const sourceIndex = draggedStepIndex;
+    setDraggedStepIndex(null);
+    if (sourceIndex === null || sourceIndex === targetIndex) return;
+    const creditOfficerIndex = formLimits.workflowSteps.indexOf("Credit Officer");
+    const boundedTarget = Math.min(targetIndex, creditOfficerIndex - 1);
+    moveStep(sourceIndex, boundedTarget);
+  }
+
+  function removeStep(index: number) {
+    setFormLimits((current) => ({
+      ...current,
+      workflowSteps: current.workflowSteps.filter((_, stepIndex) => stepIndex !== index),
+    }));
+  }
+
+  function addStep() {
+    if (!selectedRoleToAdd || formLimits.workflowSteps.length >= maximumWorkflowSteps) return;
+    setFormLimits((current) => {
+      const steps = [...current.workflowSteps];
+      steps.splice(steps.length - 1, 0, selectedRoleToAdd);
+      return { ...current, workflowSteps: steps };
+    });
+  }
+
+  async function handleSaveSteps() {
+    setIsSavingSteps(true);
+    setStepMessage("");
+    try {
+      await updateLimits(account, {
+        ...limits,
+        workflowSteps: [...formLimits.workflowSteps],
+      });
+      setStepMessage("Workflow steps saved. They apply to new applications.");
+    } catch (error) {
+      setStepMessage(error instanceof Error ? error.message : "Unable to save workflow steps.");
+    } finally {
+      setIsSavingSteps(false);
+    }
   }
 
   async function handleSave(event: FormEvent<HTMLFormElement>) {
@@ -459,11 +398,120 @@ function AdministratorWorkspace({ account }: { account: DemoAccount }) {
     <div className="workspace-panel">
       <div className="workspace-panel-heading">
         <div>
-          <h3>Workflow limits and requirements</h3>
-          <p>Limits flag or block handoffs; they never automatically approve or reject an application.</p>
+          <h3>Workflow steps, limits, and requirements</h3>
+          <p>Each configured actor must approve to continue. Any rejection stops the flow; final approval stays with a human Credit Officer.</p>
         </div>
       </div>
       <form className="workflow-form admin-limit-form" onSubmit={handleSave}>
+        <fieldset className="workflow-choice-group workflow-step-settings">
+          <legend>Approval steps</legend>
+          <p className="workflow-hint">
+            Drag an entire row to reorder. You can add the same actor more than once, up to eight
+            steps. Every step needs approval; any rejection stops the flow. Credit Officer stays
+            required and final.
+          </p>
+          <span id="workflow-step-reorder-help" className="visually-hidden">
+            Use the up and down arrow keys to reorder this step. Credit Officer must remain last.
+          </span>
+          <ol className="workflow-step-list">
+            {formLimits.workflowSteps.map((role, index) => (
+              <li
+                className={`workflow-step-item${draggedStepIndex === index ? " workflow-step-dragging" : ""}`}
+                key={`${role}-${index}`}
+                draggable={role !== "Credit Officer"}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={(event) => handleStepDrop(event, index)}
+                onDragStart={(event) => {
+                  setDraggedStepIndex(index);
+                  event.dataTransfer.effectAllowed = "move";
+                  event.dataTransfer.setData("text/plain", String(index));
+                }}
+                onDragEnd={() => setDraggedStepIndex(null)}
+              >
+                {role === "Credit Officer" ? (
+                  <span className="workflow-step-grip workflow-step-grip-fixed">FIXED</span>
+                ) : (
+                  <button
+                    className="workflow-step-grip"
+                    type="button"
+                    aria-label={`Keyboard reorder ${role}, step ${index + 1}`}
+                    aria-describedby="workflow-step-reorder-help"
+                    aria-keyshortcuts="ArrowUp ArrowDown"
+                    onKeyDown={(event) => {
+                      if (event.key === "ArrowUp" && index > 0) {
+                        event.preventDefault();
+                        moveStep(index, index - 1);
+                      } else if (
+                        event.key === "ArrowDown" &&
+                        index < formLimits.workflowSteps.length - 2
+                      ) {
+                        event.preventDefault();
+                        moveStep(index, index + 1);
+                      }
+                    }}
+                  >
+                    DRAG
+                  </button>
+                )}
+                <span className="workflow-step-copy">
+                  <strong>{index + 1}. {role}</strong>
+                  <small>
+                    {role === "Credit Officer"
+                      ? "Required human final decision"
+                      : role === "Credit Bureau"
+                        ? "Approval prepares a fictional report; requires consent"
+                        : "Approval required to continue"}
+                  </small>
+                </span>
+                <div className="workflow-step-controls">
+                  <button
+                    className="workflow-secondary-button"
+                    type="button"
+                    aria-label={`Remove ${role} step ${index + 1}`}
+                    disabled={role === "Credit Officer"}
+                    onClick={() => removeStep(index)}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ol>
+          <div className="workflow-step-add">
+            <label>
+              Add actor step
+              <select
+                value={selectedRoleToAdd ?? ""}
+                disabled={formLimits.workflowSteps.length >= maximumWorkflowSteps}
+                onChange={(event) => {
+                  const role = addableWorkflowStepRoles.find((item) => item === event.currentTarget.value);
+                  if (role) setStepRoleToAdd(role);
+                }}
+              >
+                {addableWorkflowStepRoles.map((role) => <option key={role} value={role}>{role}</option>)}
+              </select>
+            </label>
+            <button
+              className="workflow-secondary-button"
+              type="button"
+              disabled={!selectedRoleToAdd || formLimits.workflowSteps.length >= maximumWorkflowSteps}
+              onClick={addStep}
+            >
+              Add step
+            </button>
+          </div>
+          <div className="workflow-step-actions">
+            <button
+              className="workflow-primary-button"
+              type="button"
+              disabled={isSavingSteps}
+              onClick={() => { void handleSaveSteps(); }}
+            >
+              {isSavingSteps ? "Saving steps…" : "Save steps"}
+            </button>
+            {stepMessage && <span className="workflow-feedback" role="status">{stepMessage}</span>}
+          </div>
+        </fieldset>
         <label>
           Maximum per application
           <input
@@ -515,7 +563,7 @@ function AdministratorWorkspace({ account }: { account: DemoAccount }) {
           Require consent before workflow handoffs
         </label>
         <div className="workflow-form-actions">
-          <button className="workflow-primary-button" type="submit">Save demo limits</button>
+          <button className="workflow-primary-button" type="submit">Save all settings</button>
           {message && <span className="workflow-feedback" role="status">{message}</span>}
         </div>
       </form>

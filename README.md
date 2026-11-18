@@ -35,7 +35,7 @@ The `(localdb)\MSSQLLocalDB` instance has been seeded into `TheCreditBureauDemo`
 ```powershell
 sqlcmd -S "(localdb)\MSSQLLocalDB" -E -Q "IF DB_ID(N'TheCreditBureauDemo') IS NULL CREATE DATABASE [TheCreditBureauDemo];"
 sqlcmd -S "(localdb)\MSSQLLocalDB" -E -d TheCreditBureauDemo -i database\schema.sql
-sqlcmd -S "(localdb)\MSSQLLocalDB" -E -d TheCreditBureauDemo -i database\procedures.sql
+sqlcmd -S "(localdb)\MSSQLLocalDB" -E -d  c -i database\procedures.sql
 sqlcmd -S "(localdb)\MSSQLLocalDB" -E -d TheCreditBureauDemo -i database\seed.sql
 ```
 
@@ -43,7 +43,7 @@ The schema, procedure, and seed scripts are safe to rerun. Runtime application, 
 
 Password-free demo identities are stored in the database for customer, broker, bank, credit bureau, credit officer, administrator, and regulator/auditor roles. Choose an identity in the header to change who is acting. The application portfolio and actor workspace filter records by the selected role; administrator and auditor views show aggregate or audit information only. These are demo client-side presentation rules, not authentication or production access control. See `docs\data-visibility.md` for the visibility matrix and limitations.
 
-The actor workspace provides a database-backed application flow: customers submit applications and consent, brokers route them, banks request bureau reports or hand off eligible applications, the bureau prepares consented fictional reports, and Credit Officers record final demo decisions. Administrators can adjust per-application and per-bank caps, consent requirements, and required documents; auditors see a privacy-minimized event list. Limits and missing requirements block handoffs but never make a lending decision automatically. Agent definitions and UI behavior remain source-controlled configuration; transactional demo data is stored in SQL Server.
+The actor workspace provides a database-backed application flow. Administrators can drag to reorder, add, or remove supported actor steps, including repeat steps for an actor, up to eight steps total; every configured step must be approved to continue, and any rejection stops the application. The final human Credit Officer step is mandatory. A Credit Bureau approval prepares a fictional report only when the customer has consented. Workflow changes apply to new applications; open applications retain the workflow snapshot they started with. Administrators can also adjust per-application and per-bank caps, consent requirements, and required documents; auditors see a privacy-minimized event list. Limits and missing requirements block approvals but never make a lending decision automatically.
 
 ## Agents and instructions
 

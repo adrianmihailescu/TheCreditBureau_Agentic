@@ -32,7 +32,7 @@ const policies = {
   },
   "Credit Bureau": {
     title: "Consented report requests",
-    description: "Only consented demo requests. Customer names and loan amounts are not shown.",
+    description: "Only active workflow steps are listed; unconsented requests can be rejected but not accessed for reports.",
     columns: ["application", "product", "report", "consent"],
     showRecords: true,
     canSeeAmounts: false,
@@ -70,7 +70,10 @@ function isInAccountScope(account: DemoAccount, application: DemoApplicationRow)
     case "Credit Officer":
       return application.bankId === account.scopeId;
     case "Credit Bureau":
-      return application.consentRecorded;
+      return application.consentRecorded ||
+        (application.status !== "Approved" &&
+          application.status !== "Rejected" &&
+          application.workflowSteps[application.currentWorkflowStepIndex] === "Credit Bureau");
     case "Administrator":
     case "Regulator / Auditor":
       return true;

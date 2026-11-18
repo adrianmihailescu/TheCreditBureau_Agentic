@@ -48,6 +48,53 @@ BEGIN
 END;
 GO
 
+IF COL_LENGTH(N'dbo.Applications', N'WorkflowStepsJson') IS NULL
+BEGIN
+    ALTER TABLE dbo.Applications
+        ADD WorkflowStepsJson NVARCHAR(MAX) NOT NULL
+            CONSTRAINT DF_Applications_WorkflowStepsJson
+            DEFAULT N'["Broker","Bank","Credit Bureau","Credit Officer"]';
+END;
+GO
+
+IF COL_LENGTH(N'dbo.Applications', N'CurrentWorkflowStepIndex') IS NULL
+BEGIN
+    ALTER TABLE dbo.Applications
+        ADD CurrentWorkflowStepIndex INT NULL;
+END;
+GO
+
+UPDATE dbo.Applications
+SET CurrentWorkflowStepIndex = CASE Status
+    WHEN N'Bank review' THEN 1
+    WHEN N'Documents needed' THEN 1
+    WHEN N'Awaiting bureau report' THEN 2
+    WHEN N'Awaiting officer' THEN 3
+    WHEN N'In review' THEN 3
+    WHEN N'Approved' THEN 4
+    WHEN N'Rejected' THEN 4
+    ELSE 0
+END
+WHERE CurrentWorkflowStepIndex IS NULL;
+GO
+
+IF EXISTS (
+    SELECT 1
+    FROM sys.columns
+    WHERE object_id = OBJECT_ID(N'dbo.Applications')
+      AND name = N'CurrentWorkflowStepIndex'
+      AND is_nullable = 1
+)
+    ALTER TABLE dbo.Applications
+        ALTER COLUMN CurrentWorkflowStepIndex INT NOT NULL;
+GO
+
+IF OBJECT_ID(N'dbo.DF_Applications_CurrentWorkflowStepIndex', N'D') IS NULL
+    ALTER TABLE dbo.Applications
+        ADD CONSTRAINT DF_Applications_CurrentWorkflowStepIndex
+            DEFAULT (0) FOR CurrentWorkflowStepIndex;
+GO
+
 IF OBJECT_ID(N'dbo.CreditReports', N'U') IS NULL
 BEGIN
     CREATE TABLE dbo.CreditReports (
@@ -101,10 +148,22 @@ BEGIN
         BankExposureCap DECIMAL(12, 2) NOT NULL,
         RequireConsent BIT NOT NULL,
         RequiredDocumentsJson NVARCHAR(MAX) NOT NULL,
+        WorkflowStepsJson NVARCHAR(MAX) NOT NULL
+            CONSTRAINT DF_WorkflowSettings_WorkflowStepsJson
+            DEFAULT N'["Broker","Bank","Credit Bureau","Credit Officer"]',
         CONSTRAINT CK_WorkflowSettings_Id CHECK (Id = 1),
         CONSTRAINT CK_WorkflowSettings_ApplicationAmount CHECK (MaximumApplicationAmount > 0),
         CONSTRAINT CK_WorkflowSettings_BankExposure CHECK (BankExposureCap > 0)
     );
+END;
+GO
+
+IF COL_LENGTH(N'dbo.WorkflowSettings', N'WorkflowStepsJson') IS NULL
+BEGIN
+    ALTER TABLE dbo.WorkflowSettings
+        ADD WorkflowStepsJson NVARCHAR(MAX) NOT NULL
+            CONSTRAINT DF_WorkflowSettings_WorkflowStepsJson
+            DEFAULT N'["Broker","Bank","Credit Bureau","Credit Officer"]';
 END;
 GO
 

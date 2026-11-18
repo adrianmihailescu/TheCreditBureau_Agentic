@@ -14,29 +14,9 @@ public interface IDemoWorkflowService
         CreateDemoApplicationRequest request,
         CancellationToken cancellationToken);
 
-    Task<DemoActionOutcome> RouteToBankAsync(
+    Task<DemoActionOutcome> RecordWorkflowDecisionAsync(
         string id,
-        DemoActorRequest request,
-        CancellationToken cancellationToken);
-
-    Task<DemoActionOutcome> RequestBureauReportAsync(
-        string id,
-        DemoActorRequest request,
-        CancellationToken cancellationToken);
-
-    Task<DemoActionOutcome> SendToOfficerAsync(
-        string id,
-        DemoActorRequest request,
-        CancellationToken cancellationToken);
-
-    Task<DemoActionOutcome> PrepareBureauReportAsync(
-        string id,
-        DemoActorRequest request,
-        CancellationToken cancellationToken);
-
-    Task<DemoActionOutcome> RecordDecisionAsync(
-        string id,
-        RecordDemoDecisionRequest request,
+        RecordDemoWorkflowDecisionRequest request,
         CancellationToken cancellationToken);
 
     Task<DemoActionOutcome> UpdateLimitsAsync(

@@ -11,6 +11,15 @@ export const documentTypes = [
 
 export type DemoDocumentType = (typeof documentTypes)[number];
 
+export const workflowActorRoles = [
+  "Broker",
+  "Bank",
+  "Credit Bureau",
+  "Credit Officer",
+] as const;
+
+export type WorkflowActorRole = (typeof workflowActorRoles)[number];
+
 export type ApplicationStatus =
   | "Submitted"
   | "Bank review"
@@ -31,6 +40,8 @@ export interface DemoApplication {
   consentRecorded: boolean;
   documentsProvided: DemoDocumentType[];
   reportPrepared: boolean;
+  workflowSteps: WorkflowActorRole[];
+  currentWorkflowStepIndex: number;
 }
 
 export interface DemoApplicationRow extends DemoApplication {

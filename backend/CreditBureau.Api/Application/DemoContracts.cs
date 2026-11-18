@@ -45,14 +45,17 @@ public sealed record DemoApplicationResponse(
     DemoCustomerResponse Customer,
     DemoBankResponse Bank,
     DemoBrokerResponse Broker,
-    DemoCreditReportResponse? Report);
+    DemoCreditReportResponse? Report,
+    IReadOnlyList<string> WorkflowSteps,
+    int CurrentWorkflowStepIndex);
 
 /// <summary>Represents persisted workflow configuration.</summary>
 public sealed record DemoWorkflowLimitsResponse(
     decimal MaximumApplicationAmount,
     decimal BankExposureCap,
     bool RequireConsent,
-    IReadOnlyList<string> RequiredDocuments);
+    IReadOnlyList<string> RequiredDocuments,
+    IReadOnlyList<string> WorkflowSteps);
 
 /// <summary>Represents a privacy-minimized demo workflow audit event.</summary>
 public sealed record DemoAuditEventResponse(
@@ -96,15 +99,8 @@ public sealed record CreateDemoApplicationRequest
     public required IReadOnlyList<string> DocumentsProvided { get; init; }
 }
 
-/// <summary>Identifies the acting demo account for a workflow action.</summary>
-public sealed record DemoActorRequest
-{
-    [Required, StringLength(64)]
-    public required string ActorAccountId { get; init; }
-}
-
-/// <summary>Payload for recording a credit officer decision.</summary>
-public sealed record RecordDemoDecisionRequest
+/// <summary>Payload for recording an approval or rejection for the current workflow step.</summary>
+public sealed record RecordDemoWorkflowDecisionRequest
 {
     [Required, StringLength(64)]
     public required string ActorAccountId { get; init; }
@@ -113,7 +109,7 @@ public sealed record RecordDemoDecisionRequest
     public required string Decision { get; init; }
 }
 
-/// <summary>Payload for changing persisted demo workflow limits.</summary>
+/// <summary>Payload for changing persisted demo workflow settings.</summary>
 public sealed record UpdateDemoWorkflowLimitsRequest
 {
     [Required, StringLength(64)]
@@ -129,6 +125,9 @@ public sealed record UpdateDemoWorkflowLimitsRequest
 
     [Required]
     public required IReadOnlyList<string> RequiredDocuments { get; init; }
+
+    [Required]
+    public required IReadOnlyList<string> WorkflowSteps { get; init; }
 }
 
 /// <summary>Confirms a persisted workflow action.</summary>

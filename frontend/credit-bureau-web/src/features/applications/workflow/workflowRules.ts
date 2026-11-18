@@ -1,10 +1,15 @@
-import type { DemoApplication, DemoDocumentType } from "../models/application";
+import type {
+  DemoApplication,
+  DemoDocumentType,
+  WorkflowActorRole,
+} from "../models/application";
 
 export interface DemoFlowLimits {
   maximumApplicationAmount: number;
   bankExposureCap: number;
   requireConsent: boolean;
   requiredDocuments: DemoDocumentType[];
+  workflowSteps: WorkflowActorRole[];
 }
 
 export const initialFlowLimits: DemoFlowLimits = {
@@ -12,6 +17,7 @@ export const initialFlowLimits: DemoFlowLimits = {
   bankExposureCap: 150000,
   requireConsent: true,
   requiredDocuments: ["Proof of identity", "Proof of income"],
+  workflowSteps: ["Broker", "Bank", "Credit Bureau", "Credit Officer"],
 };
 
 export function getApplicationIssues(

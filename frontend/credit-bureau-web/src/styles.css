@@ -292,13 +292,14 @@ h1 {
 }
 
 .flow-steps {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 34px minmax(0, 1fr) 34px minmax(0, 1fr) 34px minmax(0, 1fr);
+  display: flex;
   align-items: center;
   gap: 7px;
+  overflow-x: auto;
 }
 
 .flow-step {
+  flex: 1 0 170px;
   min-width: 0;
   min-height: 122px;
   display: flex;
@@ -358,6 +359,7 @@ h1 {
 }
 
 .flow-arrow {
+  flex: 0 0 34px;
   color: #67b9aa;
   font-size: 19px;
   text-align: center;
@@ -918,6 +920,35 @@ h1 {
     width: calc(100% - 36px);
   }
 
+  .flow-steps {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .flow-step {
+    flex: none;
+    width: 100%;
+    min-height: 94px;
+    padding: 11px 13px;
+  }
+
+  .flow-step-number {
+    width: 22px;
+    height: 22px;
+    margin-bottom: 7px;
+  }
+
+  .flow-arrow {
+    flex: 0 0 18px;
+    height: 18px;
+    font-size: 0;
+  }
+
+  .flow-arrow::before {
+    content: "↓";
+    font-size: 15px;
+  }
+
   .intro {
     padding-top: 39px;
   }
@@ -1003,32 +1034,6 @@ h1 {
   .flow-diagram {
     gap: 12px;
     margin: 14px;
-  }
-
-  .flow-steps {
-    grid-template-columns: 1fr;
-    gap: 4px;
-  }
-
-  .flow-step {
-    min-height: 94px;
-    padding: 11px 13px;
-  }
-
-  .flow-step-number {
-    width: 22px;
-    height: 22px;
-    margin-bottom: 7px;
-  }
-
-  .flow-arrow {
-    height: 18px;
-    font-size: 0;
-  }
-
-  .flow-arrow::before {
-    content: "↓";
-    font-size: 15px;
   }
 
   .agents-panel {
@@ -1320,6 +1325,136 @@ h1 {
   color: #b7c3c9;
   font-size: 12px;
   font-weight: 650;
+}
+
+.workflow-step-settings {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 12px;
+}
+
+.workflow-step-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.workflow-step-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid #b9d5ee;
+  border-radius: 7px;
+  background: #f5f9fd;
+}
+
+.workflow-step-item[draggable="true"] {
+  cursor: grab;
+}
+
+.workflow-step-item[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.workflow-step-dragging {
+  opacity: 0.55;
+}
+
+.workflow-step-grip {
+  display: inline-flex;
+  min-width: 56px;
+  min-height: 32px;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 9px;
+  color: #2869a0;
+  border: 1px solid #b3d6ee;
+  border-radius: 6px;
+  background: #e8f2fc;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+button.workflow-step-grip {
+  cursor: grab;
+}
+
+button.workflow-step-grip:active {
+  cursor: grabbing;
+}
+
+button.workflow-step-grip:focus-visible {
+  outline: 2px solid #347dca;
+  outline-offset: 2px;
+}
+
+.workflow-step-grip-fixed {
+  color: #55748f;
+  background: #edf4fb;
+}
+
+.workflow-step-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  color: #244764;
+  font-size: 13px;
+}
+
+.workflow-step-copy small {
+  color: #64798e;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.workflow-step-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.workflow-step-controls .workflow-secondary-button,
+.workflow-step-add .workflow-secondary-button {
+  min-height: 32px;
+  padding: 5px 9px;
+  color: #2869a0;
+  border-color: #b3d6ee;
+  background: #e8f2fc;
+  font-size: 12px;
+}
+
+.workflow-step-controls .workflow-secondary-button:hover:not(:disabled),
+.workflow-step-add .workflow-secondary-button:hover:not(:disabled) {
+  background: #d9edfb;
+}
+
+.workflow-step-add {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.workflow-step-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.workflow-step-add label {
+  display: grid;
+  flex: 1 1 180px;
+  gap: 6px;
+  color: #b7c3c9;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .workflow-check {

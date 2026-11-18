@@ -67,7 +67,10 @@ public sealed class SqlDemoWorkflowRepository(string connectionString) : IDemoWo
     public async Task<bool> TryTransitionApplicationAsync(
         string applicationId,
         string expectedStatus,
+        int expectedStepIndex,
+        string expectedActorRole,
         string nextStatus,
+        int nextStepIndex,
         string actorAccountId,
         string action,
         bool prepareReport,
@@ -81,7 +84,10 @@ public sealed class SqlDemoWorkflowRepository(string connectionString) : IDemoWo
         };
         command.Parameters.Add("@ApplicationId", SqlDbType.NVarChar, 32).Value = applicationId;
         command.Parameters.Add("@ExpectedStatus", SqlDbType.NVarChar, 40).Value = expectedStatus;
+        command.Parameters.Add("@ExpectedStepIndex", SqlDbType.Int).Value = expectedStepIndex;
+        command.Parameters.Add("@ExpectedActorRole", SqlDbType.NVarChar, 40).Value = expectedActorRole;
         command.Parameters.Add("@NextStatus", SqlDbType.NVarChar, 40).Value = nextStatus;
+        command.Parameters.Add("@NextStepIndex", SqlDbType.Int).Value = nextStepIndex;
         command.Parameters.Add("@ActorAccountId", SqlDbType.NVarChar, 64).Value = actorAccountId;
         command.Parameters.Add("@Action", SqlDbType.NVarChar, 160).Value = action;
         command.Parameters.Add("@PrepareReport", SqlDbType.Bit).Value = prepareReport;
@@ -119,6 +125,8 @@ public sealed class SqlDemoWorkflowRepository(string connectionString) : IDemoWo
         command.Parameters.Add("@RequireConsent", SqlDbType.Bit).Value = request.RequireConsent;
         command.Parameters.Add("@RequiredDocumentsJson", SqlDbType.NVarChar, -1).Value =
             JsonSerializer.Serialize(request.RequiredDocuments, JsonOptions);
+        command.Parameters.Add("@WorkflowStepsJson", SqlDbType.NVarChar, -1).Value =
+            JsonSerializer.Serialize(request.WorkflowSteps, JsonOptions);
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
@@ -204,7 +212,8 @@ public sealed class SqlDemoWorkflowRepository(string connectionString) : IDemoWo
                    c.Id, c.Name, c.Email,
                    b.Id, b.Name, b.InstitutionType,
                    br.Id, br.Name, br.Organization,
-                   r.Id, r.ApplicationId, r.GeneratedAt, r.DemoScore, r.Summary
+                   r.Id, r.ApplicationId, r.GeneratedAt, r.DemoScore, r.Summary,
+                   a.WorkflowStepsJson, a.CurrentWorkflowStepIndex
             FROM dbo.Applications AS a
             INNER JOIN dbo.Customers AS c ON c.Id = a.CustomerId
             INNER JOIN dbo.Banks AS b ON b.Id = a.BankId
@@ -229,6 +238,8 @@ public sealed class SqlDemoWorkflowRepository(string connectionString) : IDemoWo
                     DateOnly.FromDateTime(reader.GetDateTime(22)),
                     reader.GetInt32(23),
                     reader.GetString(24));
+            var workflowSteps = JsonSerializer.Deserialize<string[]>(reader.GetString(25), JsonOptions)
+                ?? throw new InvalidOperationException($"Application {reader.GetString(0)} has invalid workflow steps.");
 
             items.Add(new(
                 reader.GetString(0),
@@ -245,7 +256,9 @@ public sealed class SqlDemoWorkflowRepository(string connectionString) : IDemoWo
                 new(reader.GetString(11), reader.GetString(12), reader.GetString(13)),
                 new(reader.GetString(14), reader.GetString(15), reader.GetString(16)),
                 new(reader.GetString(17), reader.GetString(18), reader.GetString(19)),
-                report));
+                report,
+                workflowSteps,
+                reader.GetInt32(26)));
         }
         return items;
     }
@@ -255,7 +268,8 @@ public sealed class SqlDemoWorkflowRepository(string connectionString) : IDemoWo
         CancellationToken cancellationToken)
     {
         const string sql = """
-            SELECT MaximumApplicationAmount, BankExposureCap, RequireConsent, RequiredDocumentsJson
+            SELECT MaximumApplicationAmount, BankExposureCap, RequireConsent,
+                   RequiredDocumentsJson, WorkflowStepsJson
             FROM dbo.WorkflowSettings
             WHERE Id = 1;
             """;
@@ -268,7 +282,14 @@ public sealed class SqlDemoWorkflowRepository(string connectionString) : IDemoWo
 
         var requiredDocuments = JsonSerializer.Deserialize<string[]>(reader.GetString(3), JsonOptions)
             ?? throw new InvalidOperationException("Demo workflow settings contain invalid document data.");
-        return new(reader.GetDecimal(0), reader.GetDecimal(1), reader.GetBoolean(2), requiredDocuments);
+        var workflowSteps = JsonSerializer.Deserialize<string[]>(reader.GetString(4), JsonOptions)
+            ?? throw new InvalidOperationException("Demo workflow settings contain invalid workflow steps.");
+        return new(
+            reader.GetDecimal(0),
+            reader.GetDecimal(1),
+            reader.GetBoolean(2),
+            requiredDocuments,
+            workflowSteps);
     }
 
     private static async Task<IReadOnlyList<DemoAuditEventResponse>> ReadAuditEventsAsync(

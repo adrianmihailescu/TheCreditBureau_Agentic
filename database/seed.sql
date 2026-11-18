@@ -88,6 +88,18 @@ SET Status = CASE Status
 WHERE Id IN (N'APP-2026-001', N'APP-2026-002', N'APP-2026-003', N'APP-2026-004');
 GO
 
+UPDATE dbo.Applications
+SET CurrentWorkflowStepIndex = CASE Status
+    WHEN N'Bank review' THEN 1
+    WHEN N'Awaiting bureau report' THEN 2
+    WHEN N'Awaiting officer' THEN 3
+    WHEN N'Approved' THEN 4
+    WHEN N'Rejected' THEN 4
+    ELSE 0
+END
+WHERE Id IN (N'APP-2026-001', N'APP-2026-002', N'APP-2026-003', N'APP-2026-004');
+GO
+
 UPDATE a
 SET ReportPrepared = 1
 FROM dbo.Applications AS a
@@ -133,7 +145,9 @@ GO
 
 IF NOT EXISTS (SELECT 1 FROM dbo.WorkflowSettings WHERE Id = 1)
     INSERT INTO dbo.WorkflowSettings
-        (Id, MaximumApplicationAmount, BankExposureCap, RequireConsent, RequiredDocumentsJson)
+        (Id, MaximumApplicationAmount, BankExposureCap, RequireConsent,
+         RequiredDocumentsJson, WorkflowStepsJson)
     VALUES
-        (1, 50000, 150000, 1, N'["Proof of identity","Proof of income"]');
+        (1, 50000, 150000, 1, N'["Proof of identity","Proof of income"]',
+         N'["Broker","Bank","Credit Bureau","Credit Officer"]');
 GO
